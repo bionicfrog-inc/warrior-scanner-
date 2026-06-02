@@ -15,7 +15,7 @@ app = Flask(__name__)
 
 # Railway utilise la variable PORT
 PORT     = int(os.environ.get("PORT", 5000))
-CSV_PATH = Path("resultats.csv")
+CSV_PATH = Path("results.csv")
 
 # Clés API depuis variables d'environnement (sécurisé pour le cloud)
 FMP_KEY     = os.environ.get("FMP_KEY",     "U87EgtNaQOdshmSkc0IgEtCFcgqTDjvy")
