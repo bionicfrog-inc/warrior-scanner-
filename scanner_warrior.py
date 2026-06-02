@@ -21,7 +21,7 @@ MIN_VARIATION = 10.0    # Already up +10% minimum
 MIN_RVOL      = 5.0     # Relative Volume 5x minimum
 MAX_FLOAT_M   = 20.0    # Float max 20 millions de titres
 TOP_N         = 10
-DELAI         = 0.25    # délai entre requêtes (secondes)
+DELAI         = 0    # délai entre requêtes (secondes)
 
 print("\n" + "═"*62)
 print("  ⚔️   WARRIOR STYLE SCANNER  —  Small Cap Momentum")
