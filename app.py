@@ -19,7 +19,7 @@ CSV_PATH = Path("results.csv")
 
 # Clés API depuis variables d'environnement (sécurisé pour le cloud)
 FMP_KEY     = os.environ.get("FMP_KEY",     "U87EgtNaQOdshmSkc0IgEtCFcgqTDjvy")
-FINNHUB_KEY = os.environ.get("FINNHUB_KEY", "")
+FINNHUB_KEY = os.environ.get("FINNHUB_KEY", "d8cf7k9r01qidic7msv0d8cf7k9r01qidic7msvg")
 
 HTML = """
 <!DOCTYPE html>
