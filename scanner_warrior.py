@@ -297,7 +297,10 @@ for i, symbol in enumerate(symbols, 1):
 
     # ── Calcul du score ──────────────────────────
     scores = compute_warrior_score(data)
-    news   = get_news(symbol)
+    news = []
+
+    if scores["total"] >= 60:
+        news = get_news(symbol)
 
     has_news    = "✅" if news else "—"
     news_titles = " | ".join(n["title"] for n in news) if news else ""
