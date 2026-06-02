@@ -296,15 +296,17 @@ for i, symbol in enumerate(symbols, 1):
         continue
 
     # ── Calcul du score ──────────────────────────
-    scores = compute_warrior_score(data)
-    news = []
+   # ── Calcul du score ──────────────────────────
+scores = compute_warrior_score(data)
 
-    if scores["total"] >= 60:
-        news = get_news(symbol)
+news = []
 
-    has_news    = "✅" if news else "—"
-    news_titles = " | ".join(n["title"] for n in news) if news else ""
-    news_links  = " | ".join(n["link"]  for n in news) if news else ""
+if scores["total"] >= 60:
+    news = get_news(symbol)
+
+has_news    = "✅" if news else "—"
+news_titles = " | ".join(n["title"] for n in news) if news else ""
+news_links  = " | ".join(n["link"]  for n in news) if news else ""
 
     print(
         f"✓  Score {scores['total']:>3}/100  |  "
