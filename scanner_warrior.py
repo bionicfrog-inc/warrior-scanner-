@@ -295,18 +295,17 @@ for i, symbol in enumerate(symbols, 1):
         excluded.append({"Symbol": symbol, "Raison": reason})
         continue
 
-    # ── Calcul du score ──────────────────────────
    # ── Calcul du score ──────────────────────────
-scores = compute_warrior_score(data)
+    scores = compute_warrior_score(data)
 
-news = []
+    news = []
 
-if scores["total"] >= 60:
-    news = get_news(symbol)
+    if scores["total"] >= 60:
+        news = get_news(symbol)
 
-has_news    = "✅" if news else "—"
-news_titles = " | ".join(n["title"] for n in news) if news else ""
-news_links  = " | ".join(n["link"]  for n in news) if news else ""
+    has_news    = "✅" if news else "—"
+    news_titles = " | ".join(n["title"] for n in news) if news else ""
+    news_links  = " | ".join(n["link"]  for n in news) if news else ""
 
     print(
         f"✓  Score {scores['total']:>3}/100  |  "
