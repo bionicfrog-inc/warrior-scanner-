@@ -253,7 +253,13 @@ for i, symbol in enumerate(symbols, 1):
         print("⚠  données indisponibles")
         excluded.append({"Symbol": symbol, "Raison": "Données indisponibles"})
         continue
-
+    print(
+        f"DEBUG {symbol} | "
+        f"Prix={data['prix']:.2f} | "
+        f"Var={data['variation']:.2f}% | "
+        f"Vol={data['volume']:,} | "
+        f"RVOL={data['rvol']}"
+    )
     prix      = data["prix"]
     variation = data["variation"]
     volume    = data["volume"]
