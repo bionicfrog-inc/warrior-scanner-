@@ -52,7 +52,7 @@ def get_quote_yahoo(symbol):
     try:
         url = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1m&range=1d&includePrePost=true"
         headers = {"User-Agent": "Mozilla/5.0"}
-        r = requests.get(url, headers=headers, timeout=10).json()
+        r = requests.get(url, headers=headers, timeout=3).json()
         result = r.get("chart", {}).get("result", [])
         if not result:
             return None
@@ -113,7 +113,7 @@ def get_quote_yahoo(symbol):
 def get_float_fmp(symbol):
     try:
         url = f"https://financialmodelingprep.com/api/v3/shares_float?symbol={symbol}&apikey={FMP_KEY}"
-        r = requests.get(url, timeout=5).json()
+        r = requests.get(url, timeout=2).json()
         if isinstance(r, list) and r:
             return float(r[0].get("floatShares", 0) or 0)
     except Exception:
@@ -140,7 +140,7 @@ def get_news(symbol):
     # 2. FMP
     try:
         url = f"https://financialmodelingprep.com/stable/news/stock?symbols={symbol}&limit=3&apikey={FMP_KEY}"
-        r = requests.get(url, timeout=5).json()
+        r = requests.get(url, timeout=2).json()
         if isinstance(r, list) and r:
             return [{"title": n.get("title", ""), "link": n.get("url", "")} for n in r[:3]]
     except Exception:
