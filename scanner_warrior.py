@@ -269,6 +269,7 @@ def compute_warrior_score(d):
 # =====================================================
 
 for i, symbol in enumerate(symbols, 1):
+    print(f"SCAN -> {symbol}")
     print(f"  [{i:>2}/{len(symbols)}] {symbol:<6}", end=" ", flush=True)
     time.sleep(DELAI)
 
