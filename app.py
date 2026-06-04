@@ -399,7 +399,7 @@ def run_scan():
             capture_output=True, text=True, timeout=120, cwd=os.getcwd()
         )
         if result.returncode == 0:
-    return jsonify({
+           return jsonify({
         "ok": True,
         "message": result.stdout[-3000:]
             })
