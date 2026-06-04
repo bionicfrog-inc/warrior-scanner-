@@ -396,19 +396,35 @@ def run_scan():
     try:
         result = subprocess.run(
             [sys.executable, "scanner_warrior.py"],
-            capture_output=True, text=True, timeout=120, cwd=os.getcwd()
+            capture_output=True,
+            text=True,
+            timeout=120,
+            cwd=os.getcwd()
         )
+
         if result.returncode == 0:
-           return jsonify({
-        "ok": True,
-        "message": result.stdout[-3000:]
+            return jsonify({
+                "ok": True,
+                "message": result.stdout[-3000:]
             })
+
         else:
-            return jsonify({"ok": False, "message": result.stderr[-200:] or "Erreur scanner"})
+            return jsonify({
+                "ok": False,
+                "message": result.stderr[-200:] or "Erreur scanner"
+            })
+
     except subprocess.TimeoutExpired:
-        return jsonify({"ok": False, "message": "Timeout — scan trop long"})
+        return jsonify({
+            "ok": False,
+            "message": "Timeout — scan trop long"
+        })
+
     except Exception as e:
-        return jsonify({"ok": False, "message": str(e)})
+        return jsonify({
+            "ok": False,
+            "message": str(e)
+        })
 
 if __name__ == "__main__":
     print("\n" + "="*50)
