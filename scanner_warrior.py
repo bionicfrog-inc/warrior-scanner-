@@ -274,6 +274,7 @@ for i, symbol in enumerate(symbols, 1):
     time.sleep(DELAI)
 
     data = get_quote_yahoo(symbol)
+    print(f"DATA -> {data}")
     if not data:
         print("⚠  données indisponibles")
         excluded.append({"Symbol": symbol, "Raison": "Données indisponibles"})
