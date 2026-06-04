@@ -36,9 +36,13 @@ print("═"*62 + "\n")
 try:
     with open("watchlist.txt", "r") as f:
         symbols = [line.strip().upper() for line in f if line.strip() and not line.startswith("#")]
-    print(f"  {len(symbols)} symboles chargés depuis watchlist.txt\n")
-except Exception:
-    print("  ❌  watchlist.txt introuvable")
+
+    print(f"  {len(symbols)} symboles chargés depuis watchlist.txt")
+    print("DEBUG WATCHLIST:")
+    print(symbols[:10])
+
+except Exception as e:
+    print(f"❌ watchlist.txt introuvable : {e}")
     exit()
 
 results  = []
