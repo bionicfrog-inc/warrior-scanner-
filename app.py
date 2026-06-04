@@ -399,7 +399,10 @@ def run_scan():
             capture_output=True, text=True, timeout=120, cwd=os.getcwd()
         )
         if result.returncode == 0:
-            return jsonify({"ok": True,  "message": "Scan terminé avec succès"})
+    return jsonify({
+        "ok": True,
+        "message": result.stdout[-3000:]
+            })
         else:
             return jsonify({"ok": False, "message": result.stderr[-200:] or "Erreur scanner"})
     except subprocess.TimeoutExpired:
