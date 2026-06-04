@@ -412,4 +412,4 @@ if __name__ == "__main__":
     print("  ⚔️  Warrior Scanner Dashboard")
     print(f"  http://localhost:{PORT}")
     print("="*50 + "\n")
-    app.run(host="0.0.0.0", port=PORT, debug=False)
+    app.run(host="0.0.0.0", port=PORT, debug=False, threaded=True)
