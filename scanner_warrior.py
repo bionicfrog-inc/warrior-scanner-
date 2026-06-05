@@ -56,16 +56,7 @@ try:
             if line.strip() and not line.startswith("#")
         ]
 
-    print(f"NB SYMBOLS = {len(symbols)}")
-
-    # TEST TEMPORAIRE
-    symbols = symbols[:5]
-
-    print("MODE TEST : seulement 5 symboles")
-
-except Exception as e:
-    print(f"❌ watchlist.txt introuvable : {e}")
-    exit()
+    
 
 results = []
 excluded = []
