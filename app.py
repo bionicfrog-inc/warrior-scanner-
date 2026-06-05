@@ -11,6 +11,8 @@ import sys
 from pathlib import Path
 from datetime import datetime
 
+print("APP VERSION TEST 999999")
+
 app = Flask(__name__)
 
 # Railway utilise la variable PORT
