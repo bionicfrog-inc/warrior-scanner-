@@ -334,8 +334,10 @@ for i, symbol in enumerate(symbols, 1):
 
     tv_link = f"https://www.tradingview.com/chart/?symbol={symbol}"
 
+    print(f"QUALIFIÉ -> {symbol}")
+
     results.append({
-        "Symbol":      symbol,
+        "Symbol":      symbol, 
         "Score":       scores["total"],
         "S.Momentum":  scores["momentum"],
         "S.Volume":    scores["volume_sc"],
