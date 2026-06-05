@@ -142,6 +142,10 @@ def get_quote_yahoo(symbol):
         
         # Prix et variation
         prix       = float(meta_rt.get("regularMarketPrice", 0) or 0)
+        print(
+            f"PRIX={prix} "
+            f"PREV={prev_close}"
+        )
         prev_close = float(
             meta_rt.get("chartPreviousClose", 0)
             or meta_rt.get("previousClose", 0)
