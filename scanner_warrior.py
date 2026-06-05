@@ -33,7 +33,7 @@ print("MAX_FLOAT_M =", MAX_FLOAT_M)
 print("\n" + "═"*62)
 print("  ⚔️   WARRIOR STYLE SCANNER  —  Small Cap Momentum")
 print("  Critères : Ross Cameron / Warrior Trading")
-print("  Prix $0.10-$20 | +10% | RVOL 5x+ | Float <20M")
+print("  MODE DEBUG — Tous les filtres désactivés")
 print("═"*62 + "\n")
 
 # =====================================================
