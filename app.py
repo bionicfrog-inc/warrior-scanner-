@@ -402,41 +402,24 @@ def run_scan():
 
     print("FICHIERS:")
     print(os.listdir("."))
-  
- try:
-    result = subprocess.run(
-        [sys.executable, "scanner_warrior.py"],
-        capture_output=True,
-        text=True,
-        timeout=600,
-        cwd=os.getcwd()
-    )
 
-    print("\n========== SCANNER STDOUT ==========")
-    print(result.stdout)
+    try:
+        result = subprocess.run(
+            [sys.executable, "scanner_warrior.py"],
+            capture_output=True,
+            text=True,
+            timeout=600,
+            cwd=os.getcwd()
+        )
 
-    print("\n========== SCANNER STDERR ==========")
-    print(result.stderr)
+        print("\n========== SCANNER STDOUT ==========")
+        print(result.stdout)
 
-    print("\n========== RETURN CODE ==========")
-    print(result.returncode)
+        print("\n========== SCANNER STDERR ==========")
+        print(result.stderr)
 
-    if result.returncode == 0:
-        return jsonify({
-            "ok": True,
-            "message": result.stdout[-3000:]
-        })
-
-    return jsonify({
-        "ok": False,
-        "message": result.stderr[-500:] or "Erreur scanner"
-    })
-
-except Exception as e:
-    return jsonify({
-        "ok": False,
-        "message": str(e)
-    })
+        print("\n========== RETURN CODE ==========")
+        print(result.returncode)
 
         if result.returncode == 0:
             return jsonify({
@@ -444,11 +427,10 @@ except Exception as e:
                 "message": result.stdout[-3000:]
             })
 
-        else:
-            return jsonify({
-                "ok": False,
-                "message": result.stderr[-200:] or "Erreur scanner"
-            })
+        return jsonify({
+            "ok": False,
+            "message": result.stderr[-500:] or "Erreur scanner"
+        })
 
     except subprocess.TimeoutExpired:
         return jsonify({
