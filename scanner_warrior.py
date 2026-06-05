@@ -14,14 +14,12 @@ FINNHUB_KEY = "d8cf7k9r01qidic7msv0d8cf7k9r01qidic7msvg"
 # CONFIG WARRIOR STYLE (Ross Cameron / Warrior Trading)
 # =====================================================
 
-MAX_PRIX      = 20.0
-MIN_PRIX      = 0.10
-MIN_VOLUME    = 500_000
-MIN_VARIATION = 100.0
+MAX_PRIX      = 1000.0
+MIN_PRIX      = 0.01
+MIN_VOLUME    = 0
+MIN_VARIATION = -100.0
 MIN_RVOL      = 0.0
-MAX_FLOAT_M   = 20.0
-TOP_N         = 10
-DELAI         = 0.1
+MAX_FLOAT_M   = 999999
 
 print("DEBUG CONFIG")
 print("MIN_PRIX =", MIN_PRIX)
