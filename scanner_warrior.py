@@ -50,20 +50,24 @@ print("MIN_RVOL =", MIN_RVOL)
 
 try:
     with open("watchlist.txt", "r") as f:
-    symbols = [line.strip().upper() for line in f if line.strip() and not line.startswith("#")]
+        symbols = [
+            line.strip().upper()
+            for line in f
+            if line.strip() and not line.startswith("#")
+        ]
 
-print(f"NB SYMBOLS = {len(symbols)}")
+    print(f"NB SYMBOLS = {len(symbols)}")
 
-# TEST TEMPORAIRE
-symbols = symbols[:5]
+    # TEST TEMPORAIRE
+    symbols = symbols[:5]
 
-print("MODE TEST : seulement 5 symboles")
+    print("MODE TEST : seulement 5 symboles")
 
 except Exception as e:
     print(f"❌ watchlist.txt introuvable : {e}")
     exit()
 
-results  = []
+results = []
 excluded = []
 
 # =====================================================
@@ -76,7 +80,27 @@ def get_quote_yahoo(symbol):
         headers = {"User-Agent": "Mozilla/5.0"}
 
         # ── 1. Historique 60j daily pour volumes moyens et SMA ──
-        url_daily = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d&range=60d"
+        url_daily = f"https://query1.finance.yahoo.cotry:
+    with open("watchlist.txt", "r") as f:
+        symbols = [
+            line.strip().upper()
+            for line in f
+            if line.strip() and not line.startswith("#")
+        ]
+
+    print(f"NB SYMBOLS = {len(symbols)}")
+
+    # TEST TEMPORAIRE
+    symbols = symbols[:5]
+
+    print("MODE TEST : seulement 5 symboles")
+
+except Exception as e:
+    print(f"❌ watchlist.txt introuvable : {e}")
+    exit()
+
+results = []
+excluded = []m/v8/finance/chart/{symbol}?interval=1d&range=60d"
         r_daily   = requests.get(url_daily, headers=headers, timeout=5).json()
         res_daily = r_daily.get("chart", {}).get("result", [])
         if not res_daily:
