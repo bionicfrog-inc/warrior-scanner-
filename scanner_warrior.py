@@ -20,6 +20,8 @@ MIN_VOLUME    = 0
 MIN_VARIATION = -100.0
 MIN_RVOL      = 0.0
 MAX_FLOAT_M   = 999999
+TOP_N         = 10
+DELAI         = 0.1
 
 print("DEBUG CONFIG")
 print("MIN_PRIX =", MIN_PRIX)
