@@ -142,7 +142,17 @@ def get_quote_yahoo(symbol):
         
         # Prix et variation
         prix       = float(meta_rt.get("regularMarketPrice", 0) or 0)
-        variation  = float(meta_rt.get("regularMarketChangePercent", 0) or 0)
+        prev_close = float(
+            meta_rt.get("chartPreviousClose", 0)
+            or meta_rt.get("previousClose", 0)
+            or 0
+        )
+
+        variation = (
+            round((prix - prev_close) / prev_close * 100, 2)
+            if prev_close > 0
+            else 0
+        )
         volume     = int(meta_rt.get("regularMarketVolume", 0) or 0)
         open_px    = float(meta_rt.get("regularMarketOpen", 0) or 0)
         prev_close = float(meta_rt.get("chartPreviousClose", 0) or 0)
