@@ -404,13 +404,13 @@ def run_scan():
     print(os.listdir("."))
   
     try:
-        result = subprocess.run(
-            [sys.executable, "scanner_warrior.py"],
-            capture_output=True,
-            text=True,
-            timeout=600
-            cwd=os.getcwd()
-        )
+    result = subprocess.run(
+        [sys.executable, "scanner_warrior.py"],
+        capture_output=True,
+        text=True,
+        timeout=600,
+        cwd=os.getcwd()
+    )
 
         print("\n========== SCANNER STDOUT ==========")
         print(result.stdout)
