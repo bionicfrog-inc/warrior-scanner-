@@ -23,6 +23,13 @@ MAX_FLOAT_M   = 20.0
 TOP_N         = 10
 DELAI         = 0.1
 
+print("DEBUG CONFIG")
+print("MIN_PRIX =", MIN_PRIX)
+print("MAX_PRIX =", MAX_PRIX)
+print("MIN_VOLUME =", MIN_VOLUME)
+print("MIN_VARIATION =", MIN_VARIATION)
+print("MIN_RVOL =", MIN_RVOL)
+print("MAX_FLOAT_M =", MAX_FLOAT_M)
 print("\n" + "═"*62)
 print("  ⚔️   WARRIOR STYLE SCANNER  —  Small Cap Momentum")
 print("  Critères : Ross Cameron / Warrior Trading")
