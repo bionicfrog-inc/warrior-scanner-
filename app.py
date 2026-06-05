@@ -412,33 +412,31 @@ def run_scan():
         cwd=os.getcwd()
     )
 
-        print("\n========== SCANNER STDOUT ==========")
-        print(result.stdout)
+    print("\n========== SCANNER STDOUT ==========")
+    print(result.stdout)
 
-        print("\n========== SCANNER STDERR ==========")
-        print(result.stderr)
+    print("\n========== SCANNER STDERR ==========")
+    print(result.stderr)
 
-        print("\n========== RETURN CODE ==========")
-        print(result.returncode)
+    print("\n========== RETURN CODE ==========")
+    print(result.returncode)
 
-        if result.returncode == 0:
-            return jsonify({
-                "ok": True,
-                "message": result.stdout[-3000:]
-            })
-
+    if result.returncode == 0:
         return jsonify({
-            "ok": False,
-            "message": result.stderr[-500:] or "Erreur scanner"
+            "ok": True,
+            "message": result.stdout[-3000:]
         })
 
-    except Exception as e:
-        print("SCAN ERROR:", str(e))
+    return jsonify({
+        "ok": False,
+        "message": result.stderr[-500:] or "Erreur scanner"
+    })
 
-        return jsonify({
-            "ok": False,
-            "message": str(e)
-        })
+except Exception as e:
+    return jsonify({
+        "ok": False,
+        "message": str(e)
+    })
 
         if result.returncode == 0:
             return jsonify({
