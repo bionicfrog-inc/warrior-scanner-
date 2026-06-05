@@ -395,6 +395,10 @@ def data():
 
 @app.route("/scan", methods=["POST"])
 def run_scan():
+  
+  print("FICHIERS DU DOSSIER:")
+  print(os.listdir("."))
+  
     try:
         result = subprocess.run(
             [sys.executable, "scanner_warrior.py"],
