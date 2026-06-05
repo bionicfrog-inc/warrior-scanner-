@@ -395,9 +395,15 @@ def data():
 
 @app.route("/scan", methods=["POST"])
 def run_scan():
-  
-  print("FICHIERS DU DOSSIER:")
-  print(os.listdir("."))
+
+    print("################################")
+    print("ROUTE /SCAN EXECUTÉE")
+    print("################################")
+
+    print("FICHIERS:")
+    print(os.listdir("."))
+
+    try:
   
     try:
         result = subprocess.run(
