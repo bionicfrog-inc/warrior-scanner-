@@ -141,15 +141,10 @@ def get_quote_yahoo(symbol):
         print(f"META_RT {symbol}")
         
         # Prix et variation
-        prix       = float(meta_rt.get("regularMarketPrice", 0) or 0)
-        print(
-            f"PRIX={prix} "
-            f"PREV={prev_close}"
-        )
+        prix = float(meta_rt.get("regularMarketPrice", 0) or 0)
+
         prev_close = float(
-            meta_rt.get("chartPreviousClose", 0)
-            or meta_rt.get("previousClose", 0)
-            or 0
+            meta_rt.get("chartPreviousClose", 0) or 0
         )
 
         variation = (
@@ -157,18 +152,22 @@ def get_quote_yahoo(symbol):
             if prev_close > 0
             else 0
         )
-            volume = int(meta_rt.get("regularMarketVolume", 0) or 0)
 
-            open_px = float(meta_rt.get("regularMarketOpen", 0) or 0)
-            prev_close = float(meta_rt.get("chartPreviousClose", 0) or 0)
+        volume = int(
+            meta_rt.get("regularMarketVolume", 0) or 0
+        )
 
-            if open_px > 0 and prev_close > 0:
-                gap = round(
-                    (open_px - prev_close) / prev_close * 100,
-                    2
-                )
-            else:
-                gap = 0.0
+        open_px = float(
+            meta_rt.get("regularMarketOpen", 0) or 0
+        )
+
+        if open_px > 0 and prev_close > 0:
+            gap = round(
+                (open_px - prev_close) / prev_close * 100,
+                2
+            )
+        else:
+            gap = 0.0
         # After-hours / Pre-market
         mode    = "Marché"
         post_px = float(meta_rt.get("postMarketPrice", 0) or 0)
