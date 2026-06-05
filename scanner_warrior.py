@@ -85,34 +85,26 @@ def get_quote_yahoo(symbol):
 
         # ── 1. Historique 60j daily pour volumes moyens et SMA ──
         url_daily = (
-     r_daily = requests.get(
-        url_daily,
-        headers=headers,
-        timeout=5
-    ).json()
-
-    res_daily = r_daily.get("chart", {}).get("result", [])
-
-    if not res_daily:
-        return None       
-    f"https://query1.finance.yahoo.com/v8/finance/chart/"
-    f"{symbol}?interval=1d&range=60d"
+            f"https://query1.finance.yahoo.com/v8/finance/chart/"
+            f"{symbol}?interval=1d&range=60d"
         )
 
-    
+        r_daily = requests.get(
+            url_daily,
+            headers=headers,
+            timeout=5
+        ).json()
 
-results = []
-excluded = []m/v8/finance/chart/{symbol}?interval=1d&range=60d"
-        r_daily   = requests.get(url_daily, headers=headers, timeout=5).json()
         res_daily = r_daily.get("chart", {}).get("result", [])
+
         if not res_daily:
             return None
 
-        meta_d  = res_daily[0].get("meta", {})
+        meta_d = res_daily[0].get("meta", {})
         q_daily = res_daily[0].get("indicators", {}).get("quote", [{}])[0]
-        closes  = [c for c in q_daily.get("close",  []) if c is not None]
-        vols_d  = [v for v in q_daily.get("volume", []) if v is not None]
 
+        closes = [c for c in q_daily.get("close", []) if c is not None]
+        vols_d = [v for v in q_daily.get("volume", []) if v is not None]
         # Volumes moyens sur données daily (CORRECT pour RVOL)
         avg_vol_10 = int(sum(vols_d[-11:-1]) / 10) if len(vols_d) >= 11 else 0
         avg_vol_30 = int(sum(vols_d[-31:-1]) / 30) if len(vols_d) >= 31 else 0
