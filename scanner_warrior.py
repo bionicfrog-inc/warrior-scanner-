@@ -85,20 +85,21 @@ def get_quote_yahoo(symbol):
 
         # ── 1. Historique 60j daily pour volumes moyens et SMA ──
         url_daily = (
+     r_daily = requests.get(
+        url_daily,
+        headers=headers,
+        timeout=5
+    ).json()
+
+    res_daily = r_daily.get("chart", {}).get("result", [])
+
+    if not res_daily:
+        return None       
     f"https://query1.finance.yahoo.com/v8/finance/chart/"
     f"{symbol}?interval=1d&range=60d"
         )
 
-    print(f"NB SYMBOLS = {len(symbols)}")
-
-    # TEST TEMPORAIRE
-    symbols = symbols[:5]
-
-    print("MODE TEST : seulement 5 symboles")
-
-except Exception as e:
-    print(f"❌ watchlist.txt introuvable : {e}")
-    exit()
+    
 
 results = []
 excluded = []m/v8/finance/chart/{symbol}?interval=1d&range=60d"
