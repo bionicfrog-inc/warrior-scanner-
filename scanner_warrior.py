@@ -3,6 +3,10 @@ import csv
 import time
 from datetime import datetime
 
+print("################################")
+print("SCANNER VERSION DEBUG V999")
+print("################################")
+
 # =====================================================
 # CLÉS API
 # =====================================================
@@ -35,6 +39,10 @@ print("  ⚔️   WARRIOR STYLE SCANNER  —  Small Cap Momentum")
 print("  Critères : Ross Cameron / Warrior Trading")
 print("  MODE DEBUG — Tous les filtres désactivés")
 print("═"*62 + "\n")
+print("MIN_PRIX =", MIN_PRIX)
+print("MAX_PRIX =", MAX_PRIX)
+print("MIN_VARIATION =", MIN_VARIATION)
+print("MIN_RVOL =", MIN_RVOL)
 
 # =====================================================
 # Charger les symboles
