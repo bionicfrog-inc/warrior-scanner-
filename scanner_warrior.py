@@ -100,7 +100,11 @@ def get_quote_yahoo(symbol):
             return None
 
         meta_rt = res_rt[0].get("meta", {})
-
+       
+        print(f"\nMETA_RT {symbol}")
+        print(meta_rt)
+        print("=" * 80)
+        
         # Prix et variation
         prix       = float(meta_rt.get("regularMarketPrice", 0) or 0)
         variation  = float(meta_rt.get("regularMarketChangePercent", 0) or 0)
