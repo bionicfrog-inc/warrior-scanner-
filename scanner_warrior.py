@@ -114,9 +114,7 @@ def get_quote_yahoo(symbol):
 
         meta_rt = res_rt[0].get("meta", {})
        
-        print(f"\nMETA_RT {symbol}")
-        print(meta_rt)
-        print("=" * 80)
+        print(f"META_RT {symbol}")
         
         # Prix et variation
         prix       = float(meta_rt.get("regularMarketPrice", 0) or 0)
