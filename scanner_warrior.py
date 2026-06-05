@@ -50,11 +50,14 @@ print("MIN_RVOL =", MIN_RVOL)
 
 try:
     with open("watchlist.txt", "r") as f:
-        symbols = [line.strip().upper() for line in f if line.strip() and not line.startswith("#")]
+    symbols = [line.strip().upper() for line in f if line.strip() and not line.startswith("#")]
 
-    print(f"  {len(symbols)} symboles chargés depuis watchlist.txt")
-    print("DEBUG WATCHLIST:")
-    print(symbols[:10])
+print(f"NB SYMBOLS = {len(symbols)}")
+
+# TEST TEMPORAIRE
+symbols = symbols[:5]
+
+print("MODE TEST : seulement 5 symboles")
 
 except Exception as e:
     print(f"❌ watchlist.txt introuvable : {e}")
