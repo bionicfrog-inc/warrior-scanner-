@@ -131,8 +131,12 @@ def get_quote_yahoo(symbol):
             return None
 
         meta_rt = res_rt[0].get("meta", {})
-        print("META_RT RAW")
+
+        print("\n==============================")
+        print(f"META_RT RAW {symbol}")
+        print("==============================")
         print(meta_rt)
+        print("==============================\n")
        
         print(f"META_RT {symbol}")
         
