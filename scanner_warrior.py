@@ -393,16 +393,25 @@ print(f"\n  ✅ {len(results)} qualifiés / ✗ {len(excluded)} exclus\n")
 # Export CSV
 # =====================================================
 
+print(f"DEBUG RESULTS = {len(results)}")
+
 if results:
     timestamp = datetime.now().strftime("%Y%m%d_%H%M")
+
     with open(f"warrior_{timestamp}.csv", "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=list(results[0].keys()))
         writer.writeheader()
         writer.writerows(results)
+
     with open("resultats.csv", "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=list(results[0].keys()))
         writer.writeheader()
         writer.writerows(results)
-    print(f"  💾 Exporté → warrior_{timestamp}.csv + resultats.csv\n")
+
+    print(f"  💾 Exporté → warrior_{timestamp}.csv + resultats.csv")
+
+else:
+    print("⚠ Aucun résultat qualifié")
+    print("⚠ resultats.csv non mis à jour")
 
 print("═"*62 + "\n")
