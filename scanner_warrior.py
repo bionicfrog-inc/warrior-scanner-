@@ -161,8 +161,9 @@ def get_quote_yahoo(symbol):
             "float_shares": float_shares,
             "mode":         mode,
         }
-    except Exception:
-        return None
+    except Exception as e:
+      print(f"ERREUR {symbol}: {e}")
+      return None
 
 
 # =====================================================
