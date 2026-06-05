@@ -408,7 +408,7 @@ def run_scan():
             [sys.executable, "scanner_warrior.py"],
             capture_output=True,
             text=True,
-            timeout=120,
+            timeout=600
             cwd=os.getcwd()
         )
 
