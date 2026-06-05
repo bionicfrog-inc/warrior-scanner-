@@ -402,8 +402,6 @@ def run_scan():
 
     print("FICHIERS:")
     print(os.listdir("."))
-
-    try:
   
     try:
         result = subprocess.run(
