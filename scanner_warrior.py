@@ -80,13 +80,10 @@ def get_quote_yahoo(symbol):
         headers = {"User-Agent": "Mozilla/5.0"}
 
         # ── 1. Historique 60j daily pour volumes moyens et SMA ──
-        url_daily = f"https://query1.finance.yahoo.cotry:
-    with open("watchlist.txt", "r") as f:
-        symbols = [
-            line.strip().upper()
-            for line in f
-            if line.strip() and not line.startswith("#")
-        ]
+        url_daily = (
+    f"https://query1.finance.yahoo.com/v8/finance/chart/"
+    f"{symbol}?interval=1d&range=60d"
+        )
 
     print(f"NB SYMBOLS = {len(symbols)}")
 
@@ -122,7 +119,7 @@ excluded = []m/v8/finance/chart/{symbol}?interval=1d&range=60d"
         # 52W
         year_high = float(meta_d.get("fiftyTwoWeekHigh", 0) or (max(closes) if closes else 0))
         year_low  = float(meta_d.get("fiftyTwoWeekLow",  0) or (min(closes) if closes else 0))
-        market_cap   = float(meta_d.get("marketCap",    0) or 0)
+        market_cap   = float(meta_d.get( "marketCap",    0) or 0)
         float_shares = float(meta_d.get("floatShares",  0) or 0)
 
         # ── 2. Données intraday pour prix temps réel + volume du jour ──
