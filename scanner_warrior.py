@@ -185,9 +185,6 @@ def get_quote_yahoo(symbol):
         # RVOL = volume du jour / moyenne daily des 10 derniers jours (CORRECT)
         rvol = round(volume / avg_vol_10, 2) if avg_vol_10 > 0 else 0.0
 
-        # Gap overnight
-        gap = round((open_px - prev_close) / prev_close * 100, 2) if prev_close else 0.0
-
         return {
             "prix":         prix,
             "variation":    variation,
