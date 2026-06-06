@@ -222,7 +222,7 @@ def get_float_finnhub(symbol):
     try:
         url = (
             f"https://finnhub.io/api/v1/stock/profile2"
-            f"?symbol={symbol}&token={d8cf7k9r01qidic7msv0d8cf7k9r01qidic7msvg}"
+            f"?symbol={symbol}&token={FINNHUB_KEY}"
         )
 
         r = requests.get(url, timeout=5)
