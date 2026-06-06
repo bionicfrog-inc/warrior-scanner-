@@ -395,10 +395,17 @@ for i, symbol in enumerate(symbols, 1):
         continue
 
     # Float
-    float_shares = get_float_fmp(symbol) or data.get("float_shares", 0)
-    float_m = float_shares / 1_000_000
+    # Float Yahoo seulement (FMP désactivé)
 
-    if float_m > MAX_FLOAT_M and float_m > 0:
+    float_shares = data.get("float_shares", 0)
+
+    if float_shares:
+        float_m = float_shares / 1_000_000
+    else:
+        float_m = 0
+
+    # Appliquer le filtre seulement si Yahoo fournit un float valide
+    if float_m > 0 and float_m > MAX_FLOAT_M:
         reason = f"Float trop élevé ({float_m:.1f}M)"
         print(f"✗ {reason}")
         excluded.append({"Symbol": symbol, "Raison": reason})
