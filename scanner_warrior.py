@@ -352,8 +352,8 @@ for i, symbol in enumerate(symbols, 1):
 
     data = get_quote_yahoo(symbol)
 
-    print("TEST FINNHUB")
-    print(get_float_finnhub(symbol))
+    print("RAW DATA")
+    print(data)
 
     if data:
         print(
