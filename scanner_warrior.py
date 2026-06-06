@@ -225,7 +225,7 @@ def get_float_fmp(symbol):
 
     try:
         url = (
-            f"https://financialmodelingprep.com/api/v3/"
+            f"https://financialmodelingprep.com/api/v4/"
             f"shares_float?symbol={symbol}&apikey={FMP_KEY}"
         )
 
