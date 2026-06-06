@@ -357,14 +357,14 @@ for i, symbol in enumerate(symbols, 1):
 
     data = get_quote_yahoo(symbol)
     if data:
-    print(
-        f"{symbol} | "
-        f"Prix={data['prix']:.2f} | "
-        f"Var={data['variation']:.2f}% | "
-        f"Vol={data['volume']:,} | "
-        f"RVOL={data['rvol']:.2f} | "
-        f"Float={data.get('float_shares',0)/1000000:.1f}M"
-    )
+        print(
+            f"{symbol} | "
+            f"Prix={data['prix']:.2f} | "
+            f"Var={data['variation']:.2f}% | "
+            f"Vol={data['volume']:,} | "
+            f"RVOL={data['rvol']:.2f} | "
+            f"Float={data.get('float_shares',0)/1000000:.1f}M"
+        )
     else:
         print(f"{symbol} | DATA = None")
     
