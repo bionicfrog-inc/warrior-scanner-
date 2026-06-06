@@ -157,9 +157,16 @@ def get_quote_yahoo(symbol):
             meta_rt.get("regularMarketVolume", 0) or 0
         )
 
-        open_px = float(
-            meta_rt.get("regularMarketOpen", 0) or 0
-        )
+        q_rt = res_rt[0].get("indicators", {}).get("quote", [{}])[0]
+
+        opens = q_rt.get("open", [])
+
+        open_px = 0.0
+
+        for o in opens:
+            if o is not None:
+                open_px = float(o)
+                break
 
         if open_px > 0 and prev_close > 0:
             gap = round(
