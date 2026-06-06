@@ -220,13 +220,26 @@ def get_quote_yahoo(symbol):
 # =====================================================
 
 def get_float_fmp(symbol):
+
+    print(f"FMP FLOAT -> {symbol}")
+
     try:
-        url = f"https://financialmodelingprep.com/api/v3/shares_float?symbol={symbol}&apikey={FMP_KEY}"
+        url = (
+            f"https://financialmodelingprep.com/api/v3/"
+            f"shares_float?symbol={symbol}&apikey={FMP_KEY}"
+        )
+
         r = requests.get(url, timeout=3).json()
+
+        print("FMP RESPONSE:")
+        print(r)
+
         if isinstance(r, list) and r:
             return float(r[0].get("floatShares", 0) or 0)
-    except Exception:
-        pass
+
+    except Exception as e:
+        print("FMP ERROR:", e)
+
     return 0.0
 
 
