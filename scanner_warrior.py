@@ -351,6 +351,10 @@ for i, symbol in enumerate(symbols, 1):
     time.sleep(DELAI)
 
     data = get_quote_yahoo(symbol)
+
+    print("TEST FINNHUB")
+    print(get_float_finnhub(symbol))
+
     if data:
         print(
             f"{symbol} | "
