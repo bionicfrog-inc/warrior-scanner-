@@ -218,28 +218,23 @@ def get_quote_yahoo(symbol):
 # Float depuis FMP (plus fiable que Yahoo)
 # =====================================================
 
-def get_float_fmp(symbol):
-
-    print(f"FMP FLOAT -> {symbol}")
-
+def get_float_finnhub(symbol):
     try:
         url = (
-            f"https://financialmodelingprep.com/api/v4/"
-            f"shares_float?symbol={symbol}&apikey={FMP_KEY}"
+            f"https://finnhub.io/api/v1/stock/profile2"
+            f"?symbol={symbol}&token={d8cf7k9r01qidic7msv0d8cf7k9r01qidic7msvg}"
         )
 
-        r = requests.get(url, timeout=3).json()
+        r = requests.get(url, timeout=5)
 
-        print("FMP RESPONSE:")
-        print(r)
+        print("FINNHUB STATUS =", r.status_code)
+        print("FINNHUB DATA =", r.text[:500])
 
-        if isinstance(r, list) and r:
-            return float(r[0].get("floatShares", 0) or 0)
+        return r.json()
 
     except Exception as e:
-        print("FMP ERROR:", e)
-
-    return 0.0
+        print("FINNHUB ERROR =", e)
+        return None
 
 
 # =====================================================
