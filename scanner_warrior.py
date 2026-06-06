@@ -366,6 +366,15 @@ for i, symbol in enumerate(symbols, 1):
     variation = data["variation"]
     volume    = data["volume"]
     rvol      = data["rvol"]
+    
+    print(
+        f"{symbol} | "
+        f"Prix={prix:.2f} | "
+        f"Var={variation:.2f}% | "
+        f"Vol={volume:,} | "
+        f"RVOL={rvol:.2f} | "
+        f"Float={data.get('float_shares',0)/1000000:.1f}M"
+    )
 
     print(f"| ${prix:.2f} | {variation:+.2f}% | Vol:{volume:,} | RVOL:{rvol:.2f}x", end=" ")
 
