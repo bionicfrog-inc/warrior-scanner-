@@ -62,9 +62,8 @@ try:
 
     print(f"NB SYMBOLS = {len(symbols)}")
 
-    symbols = symbols[:5]
-
-    print("MODE TEST : seulement 5 symboles")
+    # symbols = symbols[:5]
+    # print("MODE TEST : seulement 5 symboles")
 
 except Exception as e:
     print(f"❌ watchlist.txt introuvable : {e}")
