@@ -18,12 +18,12 @@ FINNHUB_KEY = "d8cf7k9r01qidic7msv0d8cf7k9r01qidic7msvg"
 # CONFIG WARRIOR STYLE (Ross Cameron / Warrior Trading)
 # =====================================================
 
-MAX_PRIX      = 1000.0
+MAX_PRIX      = 20.0
 MIN_PRIX      = 0.01
 MIN_VOLUME    = 500000
 MIN_VARIATION = 10.0
-MIN_RVOL      = 5.0
-MAX_FLOAT_M   = 20
+MIN_RVOL      = 2.0
+MAX_FLOAT_M   = 50
 TOP_N         = 10
 DELAI         = 0.1
 
