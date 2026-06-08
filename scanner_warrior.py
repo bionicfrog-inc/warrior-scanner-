@@ -20,10 +20,10 @@ FINNHUB_KEY = "d8cf7k9r01qidic7msv0d8cf7k9r01qidic7msvg"
 
 MAX_PRIX      = 20.0
 MIN_PRIX      = 0.01
-MIN_VOLUME    = 500000
-MIN_VARIATION = 10.0
-MIN_RVOL      = 2.0
-MAX_FLOAT_M   = 50
+MIN_VOLUME    = 250000
+MIN_VARIATION = 5.0
+MIN_RVOL      = 1.5
+MAX_FLOAT_M   = 100
 TOP_N         = 10
 DELAI         = 0.1
 
