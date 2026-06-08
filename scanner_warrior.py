@@ -52,26 +52,26 @@ print("MIN_RVOL =", MIN_RVOL)
 # Charger les symboles
 # =====================================================
 
-try:
-    with open("watchlist.txt", "r") as f:
-        symbols = [
-            line.strip().upper()
-            for line in f
-            if line.strip() and not line.startswith("#")
-        ]
+def build_watchlist():
+    import requests
 
-    print(f"NB SYMBOLS = {len(symbols)}")
+    symbols = []
 
-    # symbols = symbols[:5]
-    # print("MODE TEST : seulement 5 symboles")
+    try:
+        url = "https://financialmodelingprep.com/stable/stock-screener?marketCapMoreThan=1000000&marketCapLowerThan=500000000&priceLowerThan=20&exchange=NASDAQ&apikey=" + FMP_KEY
 
-except Exception as e:
-    print(f"❌ watchlist.txt introuvable : {e}")
-    exit()
-    
+        data = requests.get(url, timeout=20).json()
 
-results = []
-excluded = []
+        for stock in data:
+            symbol = stock.get("symbol")
+
+            if symbol:
+                symbols.append(symbol.upper())
+
+    except Exception as e:
+        print("ERREUR WATCHLIST:", e)
+
+    return list(set(symbols))
 
 # =====================================================
 # Données Yahoo Finance — DEUX appels séparés
