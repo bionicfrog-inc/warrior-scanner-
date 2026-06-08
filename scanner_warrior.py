@@ -48,10 +48,6 @@ print("MIN_RVOL =", MIN_RVOL)
 # Charger les symboles
 # =====================================================
 
-# =====================================================
-# Charger les symboles
-# =====================================================
-
 def build_watchlist():
     import requests
 
