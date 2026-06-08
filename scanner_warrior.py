@@ -45,12 +45,46 @@ print("MIN_VARIATION =", MIN_VARIATION)
 print("MIN_RVOL =", MIN_RVOL)
 
 # =====================================================
-# Charger les symboles
+# Charger les symboles automatiquement
 # =====================================================
 
 def build_watchlist():
-    ...
-    return list(set(symbols))
+
+    symbols = []
+
+    try:
+
+        url = (
+            f"https://financialmodelingprep.com/stable/stock-screener"
+            f"?marketCapMoreThan=1000000"
+            f"&marketCapLowerThan=500000000"
+            f"&priceLowerThan=20"
+            f"&exchange=NASDAQ"
+            f"&apikey={FMP_KEY}"
+        )
+
+        print("Téléchargement de la watchlist...")
+
+        data = requests.get(url, timeout=20).json()
+
+        print("Type retourné =", type(data))
+
+        if isinstance(data, list):
+
+            for stock in data:
+
+                symbol = stock.get("symbol")
+
+                if symbol:
+                    symbols.append(symbol.upper())
+
+        print(f"Symboles téléchargés : {len(symbols)}")
+
+    except Exception as e:
+
+        print("ERREUR WATCHLIST :", e)
+
+    return sorted(list(set(symbols)))
 
 
 print("Construction de la watchlist...")
@@ -59,11 +93,15 @@ symbols = build_watchlist()
 
 print(f"NB SYMBOLS = {len(symbols)}")
 
-print("\nWATCHLIST SAMPLE:")
-for s in symbols[:20]:
-    print(s)
+if len(symbols) > 0:
 
-if not symbols:
+    print("\nPREMIERS SYMBOLES :")
+
+    for s in symbols[:20]:
+        print(s)
+
+else:
+
     print("❌ Aucun symbole trouvé")
     exit()
 
