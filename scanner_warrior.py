@@ -45,7 +45,7 @@ print("MIN_VARIATION =", MIN_VARIATION)
 print("MIN_RVOL =", MIN_RVOL)
 
 # =====================================================
-# Charger les symboles automatiquement
+# Charger les symboles
 # =====================================================
 
 try:
@@ -61,6 +61,9 @@ try:
 except Exception as e:
     print(f"❌ watchlist.txt introuvable : {e}")
     exit()
+
+results = []
+excluded = []
    
 # =====================================================
 # Données Yahoo Finance — DEUX appels séparés
