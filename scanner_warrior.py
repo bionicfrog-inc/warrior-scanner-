@@ -48,6 +48,10 @@ print("MIN_RVOL =", MIN_RVOL)
 # Charger les symboles automatiquement
 # =====================================================
 
+# =====================================================
+# Charger les symboles automatiquement
+# =====================================================
+
 def build_watchlist():
 
     symbols = []
@@ -55,30 +59,30 @@ def build_watchlist():
     try:
 
         url = (
-            f"https://financialmodelingprep.com/stable/stock-screener"
-            f"?marketCapMoreThan=1000000"
-            f"&marketCapLowerThan=500000000"
-            f"&priceLowerThan=20"
-            f"&exchange=NASDAQ"
-            f"&apikey={FMP_KEY}"
+            f"https://financialmodelingprep.com/api/v3/stock/list"
+            f"?apikey={FMP_KEY}"
         )
 
         print("Téléchargement de la watchlist...")
 
-        data = requests.get(url, timeout=20).json()
+        data = requests.get(url, timeout=30).json()
 
         print("Type retourné =", type(data))
+        print("Nombre brut =", len(data))
 
-        if isinstance(data, list):
+        for stock in data:
 
-            for stock in data:
+            symbol = stock.get("symbol")
+            price = stock.get("price")
 
-                symbol = stock.get("symbol")
+            if (
+                symbol
+                and isinstance(price, (int, float))
+                and 0.25 <= price <= 20
+            ):
+                symbols.append(symbol.upper())
 
-                if symbol:
-                    symbols.append(symbol.upper())
-
-        print(f"Symboles téléchargés : {len(symbols)}")
+        print("Après filtre =", len(symbols))
 
     except Exception as e:
 
@@ -93,20 +97,13 @@ symbols = build_watchlist()
 
 print(f"NB SYMBOLS = {len(symbols)}")
 
-if len(symbols) > 0:
-
-    print("\nPREMIERS SYMBOLES :")
-
-    for s in symbols[:20]:
-        print(s)
-
-else:
-
+if not symbols:
     print("❌ Aucun symbole trouvé")
     exit()
 
 results = []
 excluded = []
+   
 # =====================================================
 # Données Yahoo Finance — DEUX appels séparés
 # daily pour historique/RVOL + intraday pour prix RT
