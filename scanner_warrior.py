@@ -49,26 +49,26 @@ print("MIN_RVOL =", MIN_RVOL)
 # =====================================================
 
 def build_watchlist():
-    import requests
-
-    symbols = []
-
-    try:
-        url = "https://financialmodelingprep.com/stable/stock-screener?marketCapMoreThan=1000000&marketCapLowerThan=500000000&priceLowerThan=20&exchange=NASDAQ&apikey=" + FMP_KEY
-
-        data = requests.get(url, timeout=20).json()
-
-        for stock in data:
-            symbol = stock.get("symbol")
-
-            if symbol:
-                symbols.append(symbol.upper())
-
-    except Exception as e:
-        print("ERREUR WATCHLIST:", e)
-
+    ...
     return list(set(symbols))
 
+
+print("Construction de la watchlist...")
+
+symbols = build_watchlist()
+
+print(f"NB SYMBOLS = {len(symbols)}")
+
+print("\nWATCHLIST SAMPLE:")
+for s in symbols[:20]:
+    print(s)
+
+if not symbols:
+    print("❌ Aucun symbole trouvé")
+    exit()
+
+results = []
+excluded = []
 # =====================================================
 # Données Yahoo Finance — DEUX appels séparés
 # daily pour historique/RVOL + intraday pour prix RT
