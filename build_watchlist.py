@@ -14,6 +14,9 @@ with open("nasdaqlisted.txt", "r", encoding="utf-8") as f:
         total += 1
 
         parts = line.strip().split("|")
+        
+        if total <= 5:
+            print(parts)
 
         if len(parts) < 8:
             continue
