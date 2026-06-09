@@ -1,5 +1,51 @@
 # =====================================================
 # Génération automatique de watchlist.txt
+# =====================================================
+
+symbols = []
+
+with open("nasdaqlisted.txt", "r", encoding="utf-8") as f:
+
+    next(f)  # saute l'entête
+
+    for line in f:
+
+        parts = line.strip().split("|")
+
+        if len(parts) < 8:
+            continue
+
+        symbol = parts[0].strip()
+        security_name = parts[1].upper()
+        etf = parts[6].strip()
+
+        # ETF
+        if etf == "Y":
+            continue
+
+        # Rights
+        if "RIGHT" in security_name:
+            continue
+
+        # Units
+        if "UNIT" in security_name:
+            continue
+
+        # Warrants
+        if "WARRANT" in security_name:
+            continue
+
+        symbols.append(symbol)
+
+symbols = sorted(set(symbols))
+
+with open("watchlist.txt", "w") as f:
+
+    for symbol in symbols:
+        f.write(symbol + "\n")
+
+print(f"Watchlist créée : {len(symbols)} symboles")# =====================================================
+# Génération automatique de watchlist.txt
 # à partir de nasdaqlisted.txt
 # =====================================================
 
