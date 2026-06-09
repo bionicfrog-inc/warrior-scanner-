@@ -1,4 +1,40 @@
 # =====================================================
+# TEST LECTURE NASDAQLISTED.TXT
+# =====================================================
+
+symbols = []
+total = 0
+
+with open("nasdaqlisted.txt", "r", encoding="utf-8") as f:
+
+    next(f)  # saute l'entête
+
+    for line in f:
+
+        total += 1
+
+        parts = line.strip().split("|")
+
+        # Affiche les 5 premières lignes
+        if total <= 5:
+            print(parts)
+
+        if len(parts) < 2:
+            continue
+
+        symbol = parts[0].strip()
+
+        if symbol:
+            symbols.append(symbol)
+
+with open("watchlist.txt", "w") as f:
+
+    for symbol in symbols:
+        f.write(symbol + "\n")
+
+print("Total brut :", total)
+print("Après nettoyage :", len(symbols))
+print("Watchlist créée")# =====================================================
 # Génération automatique de watchlist.txt
 # =====================================================
 
