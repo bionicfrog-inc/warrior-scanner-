@@ -405,19 +405,6 @@ def run_scan():
 
     try:
 
-        print("========== BUILD WATCHLIST ==========")
-
-        build_result = subprocess.run(
-            [sys.executable, "build_watchlist.py"],
-            capture_output=True,
-            text=True,
-            timeout=120,
-            cwd=os.getcwd()
-        )
-
-        print(build_result.stdout)
-        print(build_result.stderr)
-
         print("========== SCANNER ==========")
 
         result = subprocess.run(
