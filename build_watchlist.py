@@ -45,9 +45,9 @@ with open("nasdaqlisted.txt", "r", encoding="utf-8") as f:
         if symbol.endswith(("W", "U", "R")):
             continue
 
-        symbols.append(symbol)
+        symbol = parts[0].strip()
 
-symbols = sorted(set(symbols))
+symbols.append(symbol)
 
 with open("watchlist.txt", "w") as f:
 
