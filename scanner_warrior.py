@@ -437,6 +437,9 @@ if results:
             writer.writerows(results)
     print(f"  💾 Exporté → warrior_{ts}.csv + resultats.csv")
 else:
-    print("  ⚠ Aucun résultat — resultats.csv non mis à jour")
+    print("  ⚠ Aucun résultat — nettoyage du CSV")
+    # Vider le CSV pour ne pas afficher d'anciennes données
+    with open("resultats.csv", "w", newline="", encoding="utf-8") as f:
+        f.write("")
 
 print("=" * 62 + "\n")
