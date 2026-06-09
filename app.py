@@ -405,28 +405,28 @@ def run_scan():
 
     try:
 
-    print("========== BUILD WATCHLIST ==========")
+        print("========== BUILD WATCHLIST ==========")
 
-    build_result = subprocess.run(
-        [sys.executable, "build_watchlist.py"],
-        capture_output=True,
-        text=True,
-        timeout=120,
-        cwd=os.getcwd()
-    )
+        build_result = subprocess.run(
+            [sys.executable, "build_watchlist.py"],
+            capture_output=True,
+            text=True,
+            timeout=120,
+            cwd=os.getcwd()
+        )
 
-    print(build_result.stdout)
-    print(build_result.stderr)
+        print(build_result.stdout)
+        print(build_result.stderr)
 
-    print("========== SCANNER ==========")
+        print("========== SCANNER ==========")
 
-    result = subprocess.run(
-        [sys.executable, "scanner_warrior.py"],
-        capture_output=True,
-        text=True,
-        timeout=600,
-        cwd=os.getcwd()
-    )
+        result = subprocess.run(
+            [sys.executable, "scanner_warrior.py"],
+            capture_output=True,
+            text=True,
+            timeout=600,
+            cwd=os.getcwd()
+        )
         print("\n========== SCANNER STDOUT ==========")
         print(result.stdout)
 
