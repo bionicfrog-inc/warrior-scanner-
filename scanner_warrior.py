@@ -54,15 +54,13 @@ def get_market_session():
 
 def get_fmp_candidates():
     """
-    Utilise le screener FMP pour filtrer tout le NASDAQ
-    en UN SEUL appel API — beaucoup plus rapide que Yahoo stock par stock.
+    Utilise le screener FMP pour filtrer rapidement les actions candidates.
     """
-    print("  Étape 1 — FMP Screener en cours...")
+    print("  Etape 1 - FMP Screener en cours...")
 
     candidates = []
 
     try:
-        # Screener FMP : stocks $0.50-$20, variation > 5%, volume > 500K
         url = (
             f"https://financialmodelingprep.com/api/v3/stock-screener"
             f"?marketCapMoreThan=1000000"
@@ -79,36 +77,38 @@ def get_fmp_candidates():
         data = r.json()
 
         if not isinstance(data, list):
-            print(f"  ⚠ FMP Screener erreur: {data}")
+            print(f"  FMP Screener erreur: {data}")
             return []
 
-        print(f"  FMP Screener → {len(data)} résultats bruts")
+        print(f"  FMP Screener -> {len(data)} resultats bruts")
 
-        # Filtrer par variation et volume
         for stock in data:
             symbol = stock.get("symbol", "")
+            price = float(stock.get("price", 0) or 0)
+            change = float(stock.get("changesPercentage", 0) or 0)
+
             if not symbol:
                 continue
-        price = float(stock.get("price", 0) or 0)
-        change = float(stock.get("changesPercentage", 0) or 0)
 
-        if not (MIN_PRIX <= price <= MAX_PRIX):
-            continue
+            if len(symbol) > 5:
+                continue
 
-        if change and change < MIN_VARIATION:
-            continue
+            if any(symbol.endswith(x) for x in ["W", "U", "R", "Z", "L"]):
+                continue
 
-            # Ignorer ETFs, fonds, warrants (symboles avec W, U, R à la fin)
-            if len(symbol) > 5 or any(symbol.endswith(x) for x in ["W", "U", "R", "Z", "L"]):
+            if not (MIN_PRIX <= price <= MAX_PRIX):
+                continue
+
+            if change and change < MIN_VARIATION:
                 continue
 
             candidates.append(symbol)
 
-        print(f"  Candidats après nettoyage : {len(candidates)}\n")
+        print(f"  Candidats apres nettoyage : {len(candidates)}")
         return candidates
 
     except Exception as e:
-        print(f"  ⚠ Erreur FMP Screener: {e}")
+        print(f"  Erreur FMP Screener: {e}")
         return []
 
 
