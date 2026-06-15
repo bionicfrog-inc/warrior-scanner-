@@ -121,11 +121,20 @@ def get_fmp_movers():
                 price  = float(stock.get("price", 0) or 0)
                 change = float(stock.get("changesPercentage", 0) or 0)
 
-                if not symbol or len(symbol) > 5:
-                    continue
-                if MIN_PRIX <= price <= MAX_PRIX and change >= MIN_VARIATION:
-                    candidates.append(symbol)
+        if not symbol or len(symbol) > 5:
+            continue
 
+        if any(symbol.endswith(x) for x in ["W", "U", "R", "Z", "L"]):
+            continue
+
+        if not (MIN_PRIX <= price <= MAX_PRIX):
+            continue
+
+        if change < MIN_VARIATION:
+            continue
+
+        candidates.append(symbol)
+        
             print(f"  FMP Gainers → {len(candidates)} candidats supplémentaires")
 
     except Exception as e:
