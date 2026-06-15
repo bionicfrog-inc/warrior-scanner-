@@ -114,10 +114,11 @@ def get_fmp_candidates():
 
 def get_fmp_movers():
     """
-    Récupère les plus grosses hausses du jour via FMP.
-    Complément au screener pour ne pas rater les gros movers.
+    Recupere les plus grosses hausses du jour via FMP.
+    Complement au screener pour ne pas rater les gros movers.
     """
     candidates = []
+
     try:
         url = f"https://financialmodelingprep.com/api/v3/stock_market/gainers?apikey={FMP_KEY}"
         r = requests.get(url, timeout=8)
@@ -126,27 +127,27 @@ def get_fmp_movers():
         if isinstance(data, list):
             for stock in data:
                 symbol = stock.get("symbol", "")
-                price  = float(stock.get("price", 0) or 0)
+                price = float(stock.get("price", 0) or 0)
                 change = float(stock.get("changesPercentage", 0) or 0)
 
-        if not symbol or len(symbol) > 5:
-            continue
+                if not symbol or len(symbol) > 5:
+                    continue
 
-        if any(symbol.endswith(x) for x in ["W", "U", "R", "Z", "L"]):
-            continue
+                if any(symbol.endswith(x) for x in ["W", "U", "R", "Z", "L"]):
+                    continue
 
-        if not (MIN_PRIX <= price <= MAX_PRIX):
-            continue
+                if not (MIN_PRIX <= price <= MAX_PRIX):
+                    continue
 
-        if change < MIN_VARIATION:
-            continue
+                if change < MIN_VARIATION:
+                    continue
 
-        candidates.append(symbol)
-        
-            print(f"  FMP Gainers → {len(candidates)} candidats supplémentaires")
+                candidates.append(symbol)
+
+            print(f"  FMP Gainers -> {len(candidates)} candidats supplementaires")
 
     except Exception as e:
-        print(f"  ⚠ Erreur FMP Gainers: {e}")
+        print(f"  Erreur FMP Gainers: {e}")
 
     return candidates
 
