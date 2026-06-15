@@ -331,18 +331,11 @@ for i, symbol in enumerate(all_candidates, 1):
     volume    = data["volume"]
     rvol      = data["rvol"]
     if data["float_shares"] is not None:
-        float_m = data["float_shares"] / 1_000_000
-    else:
-        float_m = 0
-
-    float_txt = f"{float_m:.1f}M" if float_m > 0 else "N/A"
-
-    if float_m > 0:
-        float_txt = f"{float_m:.1f}M"
-    else:
-        float_txt = "N/A"
-
-    print(f"| ${prix:.2f} | {variation:+.2f}% | RVOL:{rvol:.2f}x | Float:{float_txt}", end=" ")
+    float_m = data["float_shares"] / 1_000_000
+    float_txt = f"{float_m:.1f}M"
+else:
+    float_m = 0
+    float_txt = "N/A"
     
     # Filtres stricts
     if not (MIN_PRIX <= prix <= MAX_PRIX):
