@@ -330,15 +330,20 @@ for i, symbol in enumerate(all_candidates, 1):
     variation = data["variation"]
     volume    = data["volume"]
     rvol      = data["rvol"]
-    if data["float_shares"]:
-    float_m = data["float_shares"] / 1_000_000
+    if data["float_shares"] is not None:
+        float_m = data["float_shares"] / 1_000_000
     else:
-        float_m = -1
+        float_m = 0
 
     float_txt = f"{float_m:.1f}M" if float_m > 0 else "N/A"
 
-    print(f"| ${prix:.2f} | {variation:+.2f}% | RVOL:{rvol:.2f}x | Float:{float_txt}", end=" ")
+    if float_m > 0:
+        float_txt = f"{float_m:.1f}M"
+    else:
+        float_txt = "N/A"
 
+    print(f"| ${prix:.2f} | {variation:+.2f}% | RVOL:{rvol:.2f}x | Float:{float_txt}", end=" ")
+    
     # Filtres stricts
     if not (MIN_PRIX <= prix <= MAX_PRIX):
         reason = f"Prix hors plage (${prix:.2f})"
