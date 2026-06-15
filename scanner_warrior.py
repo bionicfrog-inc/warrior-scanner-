@@ -89,6 +89,14 @@ def get_fmp_candidates():
             symbol = stock.get("symbol", "")
             if not symbol:
                 continue
+        price = float(stock.get("price", 0) or 0)
+        change = float(stock.get("changesPercentage", 0) or 0)
+
+        if not (MIN_PRIX <= price <= MAX_PRIX):
+            continue
+
+        if change and change < MIN_VARIATION:
+            continue
 
             # Ignorer ETFs, fonds, warrants (symboles avec W, U, R à la fin)
             if len(symbol) > 5 or any(symbol.endswith(x) for x in ["W", "U", "R", "Z", "L"]):
