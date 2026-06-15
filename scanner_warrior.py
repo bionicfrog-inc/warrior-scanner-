@@ -335,7 +335,9 @@ for i, symbol in enumerate(all_candidates, 1):
     else:
         float_m = -1
 
-    print(f"| ${prix:.2f} | {variation:+.2f}% | RVOL:{rvol:.2f}x | Float:{float_m:.1f}M", end=" ")
+    float_txt = f"{float_m:.1f}M" if float_m > 0 else "N/A"
+
+    print(f"| ${prix:.2f} | {variation:+.2f}% | RVOL:{rvol:.2f}x | Float:{float_txt}", end=" ")
 
     # Filtres stricts
     if not (MIN_PRIX <= prix <= MAX_PRIX):
