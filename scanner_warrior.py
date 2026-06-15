@@ -143,8 +143,11 @@ def get_quote_yahoo(symbol):
         year_high    = float(meta_d.get("fiftyTwoWeekHigh", 0) or (max(closes) if closes else 0))
         year_low     = float(meta_d.get("fiftyTwoWeekLow",  0) or (min(closes) if closes else 0))
         market_cap   = float(meta_d.get("marketCap",   0) or 0)
-        float_shares = float(meta_d.get("floatShares", 0) or 0)
+        float_shares = meta_d.get("floatShares")
 
+        if float_shares is None:
+            float_shares = meta_d.get("sharesOutstanding")
+            
         # Données intraday temps réel
         url_rt = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1m&range=1d&includePrePost=true"
         r_rt   = requests.get(url_rt, headers=headers, timeout=5).json()
