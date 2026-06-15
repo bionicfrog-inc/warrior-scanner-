@@ -1,4 +1,59 @@
-# ⚔️ Warrior Scanner
+# Warrior Scanner
+
+Scanner momentum boursier inspire de la methodologie Ross Cameron / Warrior Trading.
+
+Deploye sur Railway et utilisable aussi en local.
+
+## Criteres Warrior Style
+
+| Critere | Seuil |
+|---|---|
+| Prix | $0.50 - $20.00 |
+| Volume minimum | 500 000 actions |
+| Variation minimum finale | +10% |
+| Relative Volume (RVOL) final | 5x minimum |
+| Float ideal | moins de 100 millions de titres |
+
+## Score /100
+
+| Composante | Poids | Description |
+|---|---|---|
+| Momentum | 35 pts | Variation % du jour ou pre-market |
+| Volume | 25 pts | RVOL + dollar volume |
+| Tendance | 20 pts | SMA50/200 + prix > open |
+| Proximite 52W | 10 pts | Distance au plus haut 52 semaines |
+| Gap | 10 pts | Gap overnight ou pre-market positif |
+
+## Sources de donnees
+
+- Yahoo Finance : prix, volume, historique, pre-market et after-hours
+- FMP : screener rapide, top gainers et news
+- Finnhub : news temps reel optionnelles
+
+## Variables d'environnement
+
+Ne pas mettre les cles API directement dans le code.
+
+- `FMP_KEY` : cle Financial Modeling Prep
+- `FINNHUB_KEY` : cle Finnhub optionnelle
+
+## Utilisation locale
+
+```bash
+pip install -r requirements.txt
+python scanner_warrior.py
+python app.py
+```
+
+Le scanner genere `resultats.csv`, puis le dashboard lit ce fichier.
+
+## Fenetre optimale
+
+Pre-market et ouverture du marche US, surtout entre 9h30 et 11h00 ET.
+
+## Note
+
+Cet outil est a des fins educatives uniquement. Ce n'est pas un conseil financier.# ⚔️ Warrior Scanner
 
 Scanner momentum boursier inspiré de la méthodologie **Ross Cameron / Warrior Trading**.
 
