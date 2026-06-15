@@ -1,7 +1,9 @@
 import requests
 import csv
 import time
+import os
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 print("=" * 62)
 print("  WARRIOR SCANNER — NASDAQ DYNAMIQUE")
@@ -12,8 +14,8 @@ print("=" * 62 + "\n")
 # =====================================================
 # CLÉS API
 # =====================================================
-FMP_KEY     = "U87EgtNaQOdshmSkc0IgEtCFcgqTDjvy"
-FINNHUB_KEY = "d8cf7k9r01qidic7msv0d8cf7k9r01qidic7msvg"
+FMP_KEY     = os.environ.get("FMP_KEY", "")
+FINNHUB_KEY = os.environ.get("FINNHUB_KEY", "")
 
 # =====================================================
 # CONFIG WARRIOR
@@ -28,6 +30,22 @@ MIN_VARIATION_FINAL = 10.0  # Seuil strict pour le score final
 MIN_RVOL_FINAL      = 5.0   # Seuil strict pour le score final
 TOP_N         = 15
 DELAI         = 0.15
+
+
+def get_market_session():
+    """
+    Retourne la session US actuelle pour mieux gerer le pre-market.
+    """
+    now_et = datetime.now(ZoneInfo("America/New_York"))
+    minutes = now_et.hour * 60 + now_et.minute
+
+    if 4 * 60 <= minutes < 9 * 60 + 30:
+        return "Pre-Market"
+    if 9 * 60 + 30 <= minutes < 16 * 60:
+        return "Marche"
+    if 16 * 60 <= minutes < 20 * 60:
+        return "After-Hours"
+    return "Ferme"
 
 # =====================================================
 # ÉTAPE 1 — FMP Screener (filtre rapide sur tout le NASDAQ)
@@ -164,24 +182,27 @@ def get_quote_yahoo(symbol):
         # Open price
         q_rt   = res_rt[0].get("indicators", {}).get("quote", [{}])[0]
         opens  = [o for o in q_rt.get("open", []) if o is not None]
+        volumes_rt = [v for v in q_rt.get("volume", []) if v is not None]
         open_px = float(opens[0]) if opens else 0.0
+        intraday_volume = int(sum(volumes_rt)) if volumes_rt else 0
+        if intraday_volume > volume:
+            volume = intraday_volume
 
         gap  = round((open_px - prev_close) / prev_close * 100, 2) if (open_px > 0 and prev_close > 0) else 0.0
         rvol = round(volume / avg_vol_10, 2) if avg_vol_10 > 0 else 0.0
 
         # After-hours / Pre-market
-        mode    = "Marché"
+        mode    = get_market_session()
         post_px = float(meta_rt.get("postMarketPrice", 0) or 0)
         pre_px  = float(meta_rt.get("preMarketPrice",  0) or 0)
 
-        if post_px and abs(post_px - prix) > 0.01:
-            prix      = post_px
-            variation = round((post_px - prev_close) / prev_close * 100, 2) if prev_close else variation
-            mode      = "After-Hours"
-        elif pre_px and abs(pre_px - prix) > 0.01:
+        if mode == "Pre-Market" and pre_px:
             prix      = pre_px
             variation = round((pre_px - prev_close) / prev_close * 100, 2) if prev_close else variation
-            mode      = "Pre-Market"
+            gap       = variation
+        elif mode == "After-Hours" and post_px:
+            prix      = post_px
+            variation = round((post_px - prev_close) / prev_close * 100, 2) if prev_close else variation
 
         return {
             "prix": prix, "variation": variation, "volume": volume,
@@ -392,7 +413,8 @@ for i, symbol in enumerate(all_candidates, 1):
         "RVOL":        rvol,
         "Avg Vol 10j": data["avg_vol_10"],
         "Avg Vol 30j": data["avg_vol_30"],
-        "Float M":     round(float_m, 2),
+        "Float":       float_txt,
+        "Float M":     round(float_m, 2) if data["float_shares"] is not None else "",
         "Market Cap":  int(data["market_cap"]),
         "SMA50":       data["sma50"],
         "SMA200":      data["sma200"],
@@ -424,7 +446,7 @@ else:
         bar   = "█" * int(s["Score"] / 5) + "░" * (20 - int(s["Score"] / 5))
         print(f"\n  {i}. {s['Symbol']} {emoji}  Score {s['Score']}/100")
         print(f"     {bar}")
-        print(f"     Var:{s['Variation %']:+.1f}% | RVOL:{s['RVOL']:.1f}x | Float:{s['Float M']:.1f}M | Gap:{s['Gap %']:+.1f}%")
+        print(f"     Var:{s['Variation %']:+.1f}% | RVOL:{s['RVOL']:.1f}x | Float:{s['Float']} | Gap:{s['Gap %']:+.1f}% | {s['Mode']}")
         print(f"     M:{s['S.Momentum']} V:{s['S.Volume']} T:{s['S.Tendance']} P:{s['S.Proximite']} G:{s['S.Gap']}")
         print(f"     📈 {s['TradingView']}")
         if s["News"]:
