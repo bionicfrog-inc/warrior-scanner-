@@ -21,11 +21,11 @@ TG_CHAT_ID   = os.environ.get("TG_CHAT_ID",   "")
 # =====================================================
 MAX_PRIX             = 20.0
 MIN_PRIX             = 0.50
-MIN_VOLUME           = 500_000
+MIN_VOLUME           = 250_000
 MIN_VARIATION        = 5.0
-MIN_RVOL             = 1.5
-MAX_FLOAT_M          = 100.0
-MIN_VARIATION_FINAL  = 10.0
+MIN_RVOL             = 2.0
+MAX_FLOAT_M          = 50.0
+MIN_VARIATION_FINAL  = 5.0
 MIN_RVOL_FINAL       = 5.0
 TOP_N                = 15
 DELAI                = 0.15
