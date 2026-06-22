@@ -533,13 +533,14 @@ if not results:
     print(f"\n  Aucune action qualifiée en mode {MODE}.")
     if MODE == "OUVERTURE":
         print("  → Journée calme ou marché sans momentum aujourd'hui.")
+        # Vider le CSV seulement pendant l'ouverture (résultats périmés)
+        with open("resultats.csv", "w", newline="", encoding="utf-8") as f:
+            f.write("")
     elif MODE == "PRE-MARKET":
         print("  → Pas de gappers significatifs ce matin.")
     else:
-        print("  → Reviens en mode OUVERTURE (9h30-11h ET).")
-    # Vider le CSV
-    with open("resultats.csv", "w", newline="", encoding="utf-8") as f:
-        f.write("")
+        print("  → Résultats du dernier scan conservés.")
+        # Garder le CSV — ne pas effacer les résultats après la clôture
 else:
     for i, s in enumerate(results[:TOP_N], 1):
         emoji = "🔥" if s["Score"] >= 80 else "✅" if s["Score"] >= 60 else "📊"
