@@ -188,16 +188,42 @@ body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-ser
   <!-- FINVIZ SECTION -->
   <div class="section-content" id="section-finviz">
     <div class="finviz-header">
-      📡 <b>Finviz Scanner</b> — Stocks filtrés par Finviz Screener, scorés avec la méthode Warrior /100<br>
-      <span style="color:var(--muted)">Critères : Float &lt;50M · Volume 500K+ · Variation positive · Prix $0.50-$20</span>
+      📡 <b>Finviz Scanner</b> — Envoie un screenshot Finviz ou colle des tickers, le scanner analyse et score chaque stock /100
     </div>
 
+    <!-- INPUT ZONE -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px" id="fvz-input-grid">
+
+      <!-- Screenshot upload -->
+      <div style="background:var(--surface);border:2px dashed var(--purple);border-radius:8px;padding:20px;text-align:center;cursor:pointer" onclick="document.getElementById('fvz-file').click()" id="fvz-drop-zone">
+        <div style="font-size:32px;margin-bottom:8px">📸</div>
+        <div style="font-family:IBM Plex Mono,monospace;font-size:12px;color:var(--purple)">Upload screenshot Finviz</div>
+        <div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--muted);margin-top:4px">PNG · JPG · depuis ton téléphone</div>
+        <input type="file" id="fvz-file" accept="image/*" style="display:none" onchange="handleScreenshot(this)">
+        <div id="fvz-preview" style="margin-top:12px"></div>
+      </div>
+
+      <!-- Ticker manuel -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px">
+        <div style="font-family:IBM Plex Mono,monospace;font-size:11px;color:var(--purple);margin-bottom:8px">✏️ OU colle les tickers manuellement</div>
+        <textarea id="fvz-tickers" placeholder="TNON JAGX NXTS EHGO ADTX&#10;(séparés par espace, virgule ou nouvelle ligne)" style="width:100%;height:90px;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:IBM Plex Mono,monospace;font-size:12px;padding:8px;border-radius:4px;resize:none;outline:none"></textarea>
+        <div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--muted);margin-top:4px" id="fvz-ticker-count">0 tickers détectés</div>
+      </div>
+    </div>
+
+    <!-- Bouton analyser -->
+    <button onclick="analyserFinviz()" style="width:100%;background:var(--bg);border:2px solid var(--purple);color:var(--purple);font-family:IBM Plex Mono,monospace;font-size:13px;font-weight:600;padding:12px;border-radius:6px;cursor:pointer;margin-bottom:20px;transition:background .2s" onmouseover="this.style.background='rgba(167,139,250,.1)'" onmouseout="this.style.background='var(--bg)'" id="fvz-analyze-btn">
+      📡 Analyser avec Warrior Scanner
+    </button>
+    <div id="fvz-analyze-status" style="font-family:IBM Plex Mono,monospace;font-size:11px;color:var(--muted);text-align:center;margin-bottom:16px"></div>
+
+    <!-- Résultats -->
     <div class="tabs fvz-tabs">
-      <div class="tab active" onclick="switchFvzTab('fvz-ranking',this)">📊 Classement Finviz</div>
+      <div class="tab active" onclick="switchFvzTab('fvz-ranking',this)">📊 Classement</div>
       <div class="tab" onclick="switchFvzTab('fvz-charts',this)">📈 Graphiques</div>
       <div class="tab" onclick="switchFvzTab('fvz-table',this)">🔬 Tableau</div>
     </div>
-    <div class="tab-content active" id="fvz-ranking"><div id="fvz-ranking-list"></div></div>
+    <div class="tab-content active" id="fvz-ranking"><div id="fvz-ranking-list"><div class="empty">Upload un screenshot Finviz ou colle des tickers pour commencer.</div></div></div>
     <div class="tab-content" id="fvz-charts"><div class="charts-grid"><div class="chart-box"><div id="fvz-chart-score" style="height:280px"></div></div><div class="chart-box"><div id="fvz-chart-rvol" style="height:280px"></div></div></div></div>
     <div class="tab-content" id="fvz-table"><div style="overflow-x:auto"><table class="data-table"><thead><tr id="fvz-head"></tr></thead><tbody id="fvz-body"></tbody></table></div></div>
   </div>
@@ -399,7 +425,141 @@ function lancerFinviz(){
   }).catch(()=>{btn.textContent='📡 Finviz Scan';btn.disabled=false;status.textContent='❌ Erreur réseau';});
 }
 
-function loadData(){
+// ─── FINVIZ — Screenshot + Tickers manuels ───
+
+let fvzImage64 = null;
+
+function handleScreenshot(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    fvzImage64 = e.target.result.split(',')[1]; // base64
+    document.getElementById('fvz-preview').innerHTML =
+      `<img src="${e.target.result}" style="max-width:100%;max-height:120px;border-radius:4px;margin-top:8px">
+       <div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--green);margin-top:4px">✓ Image chargée</div>`;
+  };
+  reader.readAsDataURL(file);
+}
+
+// Compter les tickers en temps réel
+document.addEventListener('DOMContentLoaded', () => {
+  const ta = document.getElementById('fvz-tickers');
+  if (ta) {
+    ta.addEventListener('input', () => {
+      const tickers = extractTickers(ta.value);
+      document.getElementById('fvz-ticker-count').textContent = tickers.length + ' tickers détectés';
+    });
+  }
+});
+
+function extractTickers(text) {
+  // Extraire les tickers (1-5 lettres majuscules)
+  const raw = text.toUpperCase().match(/[A-Z]{1,5}/g) || [];
+  // Filtrer les mots communs non-tickers
+  const exclude = ['THE','AND','FOR','NOT','ARE','BUT','FROM','WITH','THIS','THAT','HAVE','WILL','BEEN'];
+  return [...new Set(raw.filter(t => t.length >= 1 && !exclude.includes(t)))];
+}
+
+async function analyserFinviz() {
+  const btn    = document.getElementById('fvz-analyze-btn');
+  const status = document.getElementById('fvz-analyze-status');
+  const manual = document.getElementById('fvz-tickers').value;
+
+  let tickers = [];
+
+  // 1. Si screenshot → analyser avec Claude API
+  if (fvzImage64) {
+    btn.textContent = '🤖 Claude analyse le screenshot...';
+    btn.disabled = true;
+    status.textContent = 'Extraction des tickers en cours...';
+    status.style.color = 'var(--amber)';
+
+    try {
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 500,
+          messages: [{
+            role: 'user',
+            content: [
+              {
+                type: 'image',
+                source: {type: 'base64', media_type: 'image/jpeg', data: fvzImage64}
+              },
+              {
+                type: 'text',
+                text: 'This is a Finviz stock screener screenshot. Extract ALL stock ticker symbols visible (1-5 uppercase letters). Return ONLY the tickers separated by spaces, nothing else. Example: TNON JAGX NXTS EHGO'
+              }
+            ]
+          }]
+        })
+      });
+
+      const data = await resp.json();
+      if (data.content && data.content[0]) {
+        const extracted = data.content[0].text.trim();
+        tickers = extractTickers(extracted);
+        status.textContent = `✅ Claude a trouvé ${tickers.length} tickers : ${tickers.join(' ')}`;
+        status.style.color = 'var(--green)';
+        // Mettre dans la zone texte aussi
+        document.getElementById('fvz-tickers').value = tickers.join(' ');
+        document.getElementById('fvz-ticker-count').textContent = tickers.length + ' tickers détectés';
+      }
+    } catch(e) {
+      status.textContent = '⚠ Erreur Claude API — utilise les tickers manuels';
+      status.style.color = 'var(--red)';
+    }
+  }
+
+  // 2. Si tickers manuels (ou en plus du screenshot)
+  if (manual.trim()) {
+    const manualTickers = extractTickers(manual);
+    tickers = [...new Set([...tickers, ...manualTickers])];
+  }
+
+  if (tickers.length === 0) {
+    status.textContent = '⚠ Aucun ticker trouvé — upload un screenshot ou colle des tickers';
+    status.style.color = 'var(--red)';
+    btn.textContent = '📡 Analyser avec Warrior Scanner';
+    btn.disabled = false;
+    return;
+  }
+
+  // 3. Envoyer au scanner
+  btn.textContent = `⏳ Analyse de ${tickers.length} stocks...`;
+  status.textContent = `Envoi de ${tickers.join(', ')} au scanner...`;
+  status.style.color = 'var(--amber)';
+
+  try {
+    const r = await fetch('/scan-tickers', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({tickers: tickers})
+    });
+    const d = await r.json();
+    btn.textContent = '📡 Analyser avec Warrior Scanner';
+    btn.disabled = false;
+    if (d.ok) {
+      status.textContent = `✅ ${d.count} stocks scorés`;
+      status.style.color = 'var(--green)';
+      loadFvzData();
+      document.getElementById('m-fvz').textContent = d.count;
+    } else {
+      status.textContent = '❌ ' + d.message;
+      status.style.color = 'var(--red)';
+    }
+  } catch(e) {
+    btn.textContent = '📡 Analyser avec Warrior Scanner';
+    btn.disabled = false;
+    status.textContent = '❌ Erreur réseau';
+    status.style.color = 'var(--red)';
+  }
+}
+
+
   fetch('/data').then(r=>r.json()).then(d=>{
     allData=d.rows;
     document.getElementById('scan-time').innerHTML='Dernier scan<br>'+d.mtime;
@@ -489,6 +649,34 @@ def run_scan():
         if result.returncode == 0:
             return jsonify({"ok": True,  "message": "Scan terminé"})
         return jsonify({"ok": False, "message": result.stderr[-300:] or "Erreur scanner"})
+    except subprocess.TimeoutExpired:
+        return jsonify({"ok": False, "message": "Timeout"})
+    except Exception as e:
+        return jsonify({"ok": False, "message": str(e)})
+
+@app.route("/scan-tickers", methods=["POST"])
+def scan_tickers():
+    """Analyse une liste de tickers fournis par l'utilisateur."""
+    try:
+        data    = request.get_json()
+        tickers = data.get("tickers", [])
+        if not tickers:
+            return jsonify({"ok": False, "message": "Aucun ticker reçu"})
+
+        # Passer les tickers au finviz_scanner via variable d'env
+        tickers_str = " ".join(tickers[:50])
+        env = os.environ.copy()
+        env["MANUAL_TICKERS"] = tickers_str
+
+        result = subprocess.run(
+            [sys.executable, "finviz_scanner.py"],
+            capture_output=True, text=True, timeout=300,
+            cwd=os.getcwd(), env=env
+        )
+        rows, _ = load_csv(FVZ_PATH)
+        if result.returncode == 0:
+            return jsonify({"ok": True, "message": "Analyse terminée", "count": len(rows)})
+        return jsonify({"ok": False, "message": result.stderr[-200:] or "Erreur"})
     except subprocess.TimeoutExpired:
         return jsonify({"ok": False, "message": "Timeout"})
     except Exception as e:
