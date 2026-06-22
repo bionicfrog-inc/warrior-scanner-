@@ -37,10 +37,10 @@ if jour >= 5:
 # Déterminer le mode
 if 4.0 <= heure < 9.5:
     MODE         = "PRE-MARKET"
-    MIN_VAR      = 5.0
-    MIN_RVOL     = 2.0
-    MIN_VOL      = 100_000
-    MAX_FLOAT    = 50.0
+    MIN_VAR      = 2.0
+    MIN_RVOL     = 0.5
+    MIN_VOL      = 25_000
+    MAX_FLOAT    = 100.0
     MODE_EMOJI   = "🌅"
     MODE_DESC    = "Gappers pre-market (4h-9h30 ET)"
 
