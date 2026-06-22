@@ -188,7 +188,14 @@ def run_finviz_scan():
     print("  📡 SCAN FINVIZ")
     print("=" * 50)
 
-    tickers = get_finviz_tickers()
+    # Vérifier si des tickers manuels ont été passés
+    manual = os.environ.get("MANUAL_TICKERS", "").strip()
+    if manual:
+        tickers = list(dict.fromkeys(manual.upper().split()))
+        print(f"  ✏️ Tickers manuels : {len(tickers)} reçus")
+    else:
+        tickers = get_finviz_tickers()
+
     results = []
 
     for i, symbol in enumerate(tickers, 1):
