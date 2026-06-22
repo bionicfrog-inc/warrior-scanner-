@@ -416,22 +416,29 @@ def compute_warrior_score(d):
 results  = []
 excluded = []
 
-# Collecter les candidats selon le mode
-c_screener  = get_fmp_candidates()
-c_gainers   = get_fmp_gainers()
-c_premarket = get_fmp_premarket()
+# Vérifier si des tickers manuels ont été passés (screenshot ou copier-coller)
+manual_env = os.environ.get("MANUAL_TICKERS", "").strip()
 
-all_candidates = list(set(c_screener + c_gainers + c_premarket))
+if manual_env:
+    all_candidates = list(dict.fromkeys(manual_env.upper().split()))
+    print(f"  ✏️ Mode manuel — {len(all_candidates)} tickers reçus : {' '.join(all_candidates[:10])}")
+else:
+    # Collecter les candidats selon le mode
+    c_screener  = get_fmp_candidates()
+    c_gainers   = get_fmp_gainers()
+    c_premarket = get_fmp_premarket()
 
-# Fallback watchlist
-if not all_candidates:
-    print("  ⚠ FMP sans résultats → fallback watchlist.txt")
-    try:
-        with open("watchlist.txt", "r") as f:
-            all_candidates = [l.strip().upper() for l in f if l.strip() and not l.startswith("#")]
-    except Exception:
-        print("  ❌ watchlist.txt introuvable")
-        exit()
+    all_candidates = list(set(c_screener + c_gainers + c_premarket))
+
+    # Fallback watchlist
+    if not all_candidates:
+        print("  ⚠ FMP sans résultats → fallback watchlist.txt")
+        try:
+            with open("watchlist.txt", "r") as f:
+                all_candidates = [l.strip().upper() for l in f if l.strip() and not l.startswith("#")]
+        except Exception:
+            print("  ❌ watchlist.txt introuvable")
+            exit()
 
 print(f"\n  Total candidats à analyser : {len(all_candidates)}")
 print(f"  Analyse Yahoo en cours...\n")
