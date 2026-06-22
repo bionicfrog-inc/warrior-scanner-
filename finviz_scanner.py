@@ -2,144 +2,69 @@ import requests
 import csv
 import time
 import os
+import re
 from datetime import datetime
-from html.parser import HTMLParser
 
 FMP_KEY     = os.environ.get("FMP_KEY",     "U87EgtNaQOdshmSkc0IgEtCFcgqTDjvy")
 FINNHUB_KEY = os.environ.get("FINNHUB_KEY", "d8cf7k9r01qidic7msv0d8cf7k9r01qidic7msvg")
-TG_TOKEN    = os.environ.get("TG_TOKEN",    "")
-TG_CHAT_ID  = os.environ.get("TG_CHAT_ID",  "")
+DELAI       = 0.2
 
-DELAI = 0.2
-
-# =====================================================
-# PARSER HTML FINVIZ
-# =====================================================
-
-class FinvizParser(HTMLParser):
-    """Extrait les données du tableau screener Finviz."""
-    def __init__(self):
-        super().__init__()
-        self.in_table  = False
-        self.in_row    = False
-        self.in_cell   = False
-        self.rows      = []
-        self.current   = []
-        self.cell_text = ""
-        self.headers   = []
-        self.got_hdr   = False
-
-    def handle_starttag(self, tag, attrs):
-        attrs = dict(attrs)
-        if tag == "tr":
-            cls = attrs.get("class", "")
-            if "table-light-row" in cls or "table-dark-row" in cls or cls == "":
-                self.in_row   = True
-                self.current  = []
-        if tag == "td" and self.in_row:
-            self.in_cell   = True
-            self.cell_text = ""
-        if tag == "th" and not self.got_hdr:
-            self.in_cell   = True
-            self.cell_text = ""
-
-    def handle_endtag(self, tag):
-        if tag == "td" and self.in_cell:
-            self.current.append(self.cell_text.strip())
-            self.in_cell = False
-        if tag == "th" and self.in_cell:
-            self.headers.append(self.cell_text.strip())
-            self.in_cell = False
-        if tag == "tr" and self.in_row:
-            if self.current:
-                self.rows.append(self.current)
-            self.in_row = False
-            if self.headers and not self.got_hdr:
-                self.got_hdr = True
-
-    def handle_data(self, data):
-        if self.in_cell:
-            self.cell_text += data
-
-
-def scrape_finviz():
-    """
-    Scrape le screener Finviz avec filtres Warrior :
-    - Prix $0.50-$20
-    - Volume > 500K
-    - Float < 50M
-    - Variation > +5%
-    - Marché NASDAQ/NYSE/AMEX
-    """
+def get_finviz_tickers():
+    """Récupère les tickers depuis Finviz screener."""
     print("  🔍 Finviz Screener en cours...")
-
-    # URL Finviz avec filtres Warrior
-    # f= filtres : prix, volume, float, variation, exchange
-    url = (
-        "https://finviz.com/screener.ashx"
-        "?v=111"                    # vue tableau
-        "&f=sh_float_u50"           # float < 50M
-        ",sh_price_u20"             # prix < $20
-        ",sh_price_o0.5"            # prix > $0.50
-        ",sh_curvol_o500"           # volume actuel > 500K
-        ",ta_change_u"              # variation positive
-        "&o=-change"                # tri par variation décroissante
-        "&r=1"                      # page 1
-    )
-
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        "Accept": "text/html,application/xhtml+xml",
-        "Accept-Language": "en-US,en;q=0.9",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.5",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Connection": "keep-alive",
         "Referer": "https://finviz.com/",
     }
 
+    # Filtres Warrior sur Finviz
+    # sh_float_u50 = float < 50M
+    # sh_price_u20 = prix < $20
+    # sh_price_o0.5 = prix > $0.50
+    # sh_curvol_o500 = volume > 500K
+    # ta_change_u = variation positive
+    url = "https://finviz.com/screener.ashx?v=111&f=sh_float_u50,sh_price_u20,sh_price_o0.5,sh_curvol_o500,ta_change_u&o=-change&r=1"
+
     try:
         r = requests.get(url, headers=headers, timeout=15)
-        if r.status_code != 200:
-            print(f"  ⚠ Finviz status: {r.status_code}")
-            return []
+        print(f"  Finviz status: {r.status_code}")
 
-        # Parser simple — cherche les tickers dans la page
-        stocks = []
-        lines  = r.text.split("\n")
-
-        # Finviz met les données dans des liens comme :
-        # <a href="quote.ashx?t=SMTK" ...>SMTK</a>
-        import re
-        pattern = r'quote\.ashx\?t=([A-Z]{1,5})'
-        tickers = list(dict.fromkeys(re.findall(pattern, r.text)))
-
-        # Extraire aussi les données du tableau
-        # Finviz tableau v=111 colonnes :
-        # No, Ticker, Company, Sector, Industry, Country, MarketCap,
-        # P/E, Price, Change, Volume
-        table_pattern = r'<td[^>]*>([^<]*)</td>'
-        cells = re.findall(table_pattern, r.text)
-
-        print(f"  Finviz → {len(tickers)} tickers trouvés")
-
-        # Chercher les données de chaque ticker dans la page
-        for ticker in tickers[:50]:  # max 50 pour ne pas ralentir
-            # Chercher le prix et la variation dans le HTML
-            price_pattern  = rf'quote\.ashx\?t={ticker}.*?(\d+\.\d{{2}})'
-            change_pattern = rf'{ticker}.*?([+-]?\d+\.\d+)%'
-
-            stocks.append({
-                "symbol": ticker,
-                "source": "Finviz"
-            })
-
-        return stocks
+        if r.status_code == 200:
+            # Extraire les tickers avec regex
+            tickers = re.findall(r'quote\.ashx\?t=([A-Z]{1,5})(?:&|")', r.text)
+            tickers = list(dict.fromkeys(tickers))  # dédupliquer
+            print(f"  Finviz → {len(tickers)} tickers")
+            return tickers[:40]
+        else:
+            print(f"  ⚠ Finviz bloqué ({r.status_code}) — fallback FMP gainers")
+            return get_fmp_gainers_fallback()
 
     except Exception as e:
-        print(f"  ⚠ Finviz erreur: {e}")
-        return []
+        print(f"  ⚠ Finviz erreur: {e} — fallback FMP")
+        return get_fmp_gainers_fallback()
 
 
-# =====================================================
-# YAHOO FINANCE — données complètes
-# =====================================================
+def get_fmp_gainers_fallback():
+    """Fallback : gainers FMP si Finviz bloqué."""
+    candidates = []
+    try:
+        url  = f"https://financialmodelingprep.com/api/v3/stock_market/gainers?apikey={FMP_KEY}"
+        data = requests.get(url, timeout=8).json()
+        if isinstance(data, list):
+            for s in data:
+                symbol = s.get("symbol", "")
+                price  = float(s.get("price", 0) or 0)
+                if symbol and 0.5 <= price <= 20 and len(symbol) <= 5:
+                    candidates.append(symbol)
+        print(f"  FMP Gainers fallback → {len(candidates)} candidats")
+    except Exception as e:
+        print(f"  ⚠ FMP Gainers: {e}")
+    return candidates[:40]
+
 
 def get_quote_yahoo(symbol):
     try:
@@ -155,12 +80,21 @@ def get_quote_yahoo(symbol):
         closes       = [c for c in q_d.get("close",  []) if c is not None]
         vols_d       = [v for v in q_d.get("volume", []) if v is not None]
         avg_vol_10   = int(sum(vols_d[-11:-1]) / 10) if len(vols_d) >= 11 else 0
-        avg_vol_30   = int(sum(vols_d[-31:-1]) / 30) if len(vols_d) >= 31 else 0
         sma50        = round(sum(closes[-50:])  / min(50,  len(closes)), 2) if len(closes) >= 10 else 0
         sma200       = round(sum(closes[-200:]) / min(200, len(closes)), 2) if len(closes) >= 10 else 0
         year_high    = float(meta_d.get("fiftyTwoWeekHigh", 0) or (max(closes) if closes else 0))
         market_cap   = float(meta_d.get("marketCap",   0) or 0)
         float_shares = float(meta_d.get("floatShares", 0) or 0)
+
+        # Fallback FMP pour le float
+        if float_shares == 0:
+            try:
+                fmp_url = f"https://financialmodelingprep.com/api/v3/shares_float?symbol={symbol}&apikey={FMP_KEY}"
+                fmp_r   = requests.get(fmp_url, timeout=3).json()
+                if isinstance(fmp_r, list) and fmp_r:
+                    float_shares = float(fmp_r[0].get("floatShares", 0) or 0)
+            except Exception:
+                pass
 
         url_rt = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1m&range=1d&includePrePost=true"
         r_rt   = requests.get(url_rt, headers=headers, timeout=5).json()
@@ -194,59 +128,45 @@ def get_quote_yahoo(symbol):
         return {
             "prix": prix, "variation": variation, "volume": volume,
             "open_price": open_px, "prev_close": prev_close,
-            "gap": gap, "rvol": rvol,
-            "avg_vol_10": avg_vol_10, "avg_vol_30": avg_vol_30,
+            "gap": gap, "rvol": rvol, "avg_vol_10": avg_vol_10,
             "year_high": year_high, "sma50": sma50, "sma200": sma200,
-            "market_cap": market_cap, "float_shares": float_shares,
-            "mode": mode,
+            "market_cap": market_cap, "float_shares": float_shares, "mode": mode,
         }
     except Exception:
         return None
 
 
-# =====================================================
-# SCORE /100
-# =====================================================
-
 def compute_score(d):
-    variation  = d["variation"]
-    rvol       = d["rvol"]
-    prix       = d["prix"]
-    volume     = d["volume"]
-    sma50      = d["sma50"]
-    sma200     = d["sma200"]
-    year_high  = d["year_high"]
-    gap        = d["gap"]
-    open_price = d["open_price"]
-
     m = 0
-    if variation > 0:   m += 5
-    if variation > 5:   m += 5
-    if variation > 10:  m += 10
-    if variation > 20:  m += 10
-    if variation > 30:  m += 5
+    v2 = d["variation"]
+    if v2 > 0:   m += 5
+    if v2 > 5:   m += 5
+    if v2 > 10:  m += 10
+    if v2 > 20:  m += 10
+    if v2 > 30:  m += 5
     sm = min(m, 35)
 
     v = 0
-    if rvol >= 2:  v += 5
-    if rvol >= 5:  v += 10
-    if rvol >= 10: v += 5
-    if rvol >= 20: v += 5
-    dv = prix * volume
+    rv = d["rvol"]
+    if rv >= 2:  v += 5
+    if rv >= 5:  v += 10
+    if rv >= 10: v += 5
+    if rv >= 20: v += 5
+    dv = d["prix"] * d["volume"]
     if dv > 500_000:   v += 2
     if dv > 2_000_000: v += 3
     sv = min(v, 25)
 
     t = 0
-    if sma50 > 0 and prix > sma50:                   t += 8
-    if sma50 > 0 and sma200 > 0 and sma50 > sma200: t += 7
-    if open_price > 0 and prix > open_price:         t += 5
+    if d["sma50"] > 0 and d["prix"] > d["sma50"]:                             t += 8
+    if d["sma50"] > 0 and d["sma200"] > 0 and d["sma50"] > d["sma200"]:      t += 7
+    if d["open_price"] > 0 and d["prix"] > d["open_price"]:                   t += 5
     st = min(t, 20)
 
     dist_pct = 0.0
     p = 0
-    if year_high > 0:
-        dist_pct = (year_high - prix) / year_high * 100
+    if d["year_high"] > 0:
+        dist_pct = (d["year_high"] - d["prix"]) / d["year_high"] * 100
         if dist_pct < 30: p += 2
         if dist_pct < 20: p += 2
         if dist_pct < 10: p += 3
@@ -254,40 +174,25 @@ def compute_score(d):
     sp = min(p, 10)
 
     g = 0
-    if gap > 2:  g += 3
-    if gap > 5:  g += 3
-    if gap > 10: g += 4
+    if d["gap"] > 2:  g += 3
+    if d["gap"] > 5:  g += 3
+    if d["gap"] > 10: g += 4
     sg = min(g, 10)
 
     total = sm + sv + st + sp + sg
-    return {
-        "total": max(0, min(100, total)),
-        "momentum": sm, "volume_sc": sv,
-        "tendance": st, "proximite": sp, "gap_sc": sg,
-        "dist_pct": round(dist_pct, 2),
-    }
+    return {"total": max(0, min(100, total)), "momentum": sm, "volume_sc": sv, "tendance": st, "proximite": sp, "gap_sc": sg, "dist_pct": round(dist_pct, 2)}
 
-
-# =====================================================
-# SCAN FINVIZ PRINCIPAL
-# =====================================================
 
 def run_finviz_scan():
-    """Lance le scan Finviz et retourne les résultats scorés."""
     print("\n" + "=" * 50)
     print("  📡 SCAN FINVIZ")
     print("=" * 50)
 
-    stocks   = scrape_finviz()
-    results  = []
+    tickers = get_finviz_tickers()
+    results = []
 
-    if not stocks:
-        print("  ⚠ Aucun résultat Finviz")
-        return []
-
-    for i, stock in enumerate(stocks, 1):
-        symbol = stock["symbol"]
-        print(f"  [{i:>2}/{len(stocks)}] {symbol:<6}", end=" ", flush=True)
+    for i, symbol in enumerate(tickers, 1):
+        print(f"  [{i:>2}/{len(tickers)}] {symbol:<6}", end=" ", flush=True)
         time.sleep(DELAI)
 
         data = get_quote_yahoo(symbol)
@@ -297,14 +202,11 @@ def run_finviz_scan():
 
         prix      = data["prix"]
         variation = data["variation"]
-        volume    = data["volume"]
         rvol      = data["rvol"]
         float_m   = data["float_shares"] / 1_000_000
 
-        print(f"| ${prix:.2f} | {variation:+.2f}% | RVOL:{rvol:.1f}x", end=" ")
-
         scores = compute_score(data)
-        print(f"→ Score {scores['total']}/100")
+        print(f"| ${prix:.2f} | {variation:+.1f}% | RVOL:{rvol:.1f}x | Float:{float_m:.1f}M | Score:{scores['total']}")
 
         results.append({
             "Symbol":      symbol,
@@ -317,7 +219,7 @@ def run_finviz_scan():
             "Prix":        round(prix, 2),
             "Variation %": round(variation, 2),
             "Gap %":       round(data["gap"], 2),
-            "Volume":      volume,
+            "Volume":      data["volume"],
             "RVOL":        rvol,
             "Avg Vol 10j": data["avg_vol_10"],
             "Float M":     round(float_m, 2),
@@ -329,18 +231,22 @@ def run_finviz_scan():
             "TradingView": f"https://www.tradingview.com/chart/?symbol={symbol}",
             "Finviz":      f"https://finviz.com/quote.ashx?t={symbol}",
             "Source":      "Finviz",
+            "Mode":        data.get("mode", ""),
             "Heure":       datetime.now().strftime("%H:%M:%S"),
         })
 
     results.sort(key=lambda x: x["Score"], reverse=True)
 
-    # Sauvegarder
     if results:
         with open("finviz_results.csv", "w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=list(results[0].keys()))
             writer.writeheader()
             writer.writerows(results)
         print(f"\n  💾 {len(results)} résultats → finviz_results.csv")
+    else:
+        with open("finviz_results.csv", "w", newline="", encoding="utf-8") as f:
+            f.write("")
+        print("  ⚠ Aucun résultat Finviz")
 
     return results
 
