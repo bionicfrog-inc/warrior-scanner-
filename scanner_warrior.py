@@ -72,11 +72,11 @@ elif 14.0 <= heure < 16.0:
     MODE_DESC    = "Surveillance fin de journée (14h-16h ET)"
 
 elif 16.0 <= heure < 20.0:
-    MODE         = "AFTER-HOURS"
-    MIN_VAR      = 5.0
-    MIN_RVOL     = 1.5
-    MIN_VOL      = 100_000
-    MAX_FLOAT    = 50.0
+    MODE      = "AFTER-HOURS"
+    MIN_VAR   = 2.0    # était 5.0
+    MIN_RVOL  = 0.5    # était 1.5
+    MIN_VOL   = 25_000 # était 100,000
+    MAX_FLOAT = 100.0
     MODE_EMOJI   = "🌙"
     MODE_DESC    = "After-hours (16h-20h ET)"
 
