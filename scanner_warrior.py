@@ -3,41 +3,109 @@ import csv
 import time
 import os
 from datetime import datetime
+import pytz
 
 print("=" * 62)
-print("  WARRIOR SCANNER — NASDAQ DYNAMIQUE + ALERTES TELEGRAM")
+print("  WARRIOR SCANNER — INTELLIGENT + ALERTES TELEGRAM")
 print("=" * 62 + "\n")
 
 # =====================================================
 # CLÉS API
 # =====================================================
-FMP_KEY      = os.environ.get("FMP_KEY",      "U87EgtNaQOdshmSkc0IgEtCFcgqTDjvy")
-FINNHUB_KEY  = os.environ.get("FINNHUB_KEY",  "d8cf7k9r01qidic7msv0d8cf7k9r01qidic7msvg")
-TG_TOKEN     = os.environ.get("TG_TOKEN",     "")
-TG_CHAT_ID   = os.environ.get("TG_CHAT_ID",   "")
+FMP_KEY     = os.environ.get("FMP_KEY",     "U87EgtNaQOdshmSkc0IgEtCFcgqTDjvy")
+FINNHUB_KEY = os.environ.get("FINNHUB_KEY", "d8cf7k9r01qidic7msv0d8cf7k9r01qidic7msvg")
+TG_TOKEN    = os.environ.get("TG_TOKEN",    "")
+TG_CHAT_ID  = os.environ.get("TG_CHAT_ID",  "")
 
 # =====================================================
-# CONFIG WARRIOR
+# DÉTECTION DU MODE SELON L'HEURE ET
 # =====================================================
-MAX_PRIX             = 20.0
-MIN_PRIX             = 0.50
-MIN_VOLUME           = 250_000
-MIN_VARIATION        = 5.0
-MIN_RVOL             = 2.0
-MAX_FLOAT_M          = 50.0
-MIN_VARIATION_FINAL  = 5.0
-MIN_RVOL_FINAL       = 5.0
-TOP_N                = 15
-DELAI                = 0.15
+ET = pytz.timezone("America/New_York")
+now_et = datetime.now(ET)
+heure  = now_et.hour + now_et.minute / 60
+jour   = now_et.weekday()  # 0=Lundi, 6=Dimanche
+
+# Weekend — pas de marché
+if jour >= 5:
+    print("  ⚠ Weekend — marché fermé")
+    print("  ℹ Le scanner tourne du lundi au vendredi")
+    # Vider le CSV
+    with open("resultats.csv", "w", newline="", encoding="utf-8") as f:
+        f.write("")
+    exit(0)
+
+# Déterminer le mode
+if 4.0 <= heure < 9.5:
+    MODE         = "PRE-MARKET"
+    MIN_VAR      = 5.0
+    MIN_RVOL     = 2.0
+    MIN_VOL      = 100_000
+    MAX_FLOAT    = 50.0
+    MODE_EMOJI   = "🌅"
+    MODE_DESC    = "Gappers pre-market (4h-9h30 ET)"
+
+elif 9.5 <= heure < 11.0:
+    MODE         = "OUVERTURE"
+    MIN_VAR      = 10.0
+    MIN_RVOL     = 5.0
+    MIN_VOL      = 500_000
+    MAX_FLOAT    = 20.0
+    MODE_EMOJI   = "🔥"
+    MODE_DESC    = "Critères Warrior stricts (9h30-11h ET)"
+
+elif 11.0 <= heure < 14.0:
+    MODE         = "MILIEU"
+    MIN_VAR      = 8.0
+    MIN_RVOL     = 3.0
+    MIN_VOL      = 300_000
+    MAX_FLOAT    = 30.0
+    MODE_EMOJI   = "📊"
+    MODE_DESC    = "Surveillance mid-day (11h-14h ET)"
+
+elif 14.0 <= heure < 16.0:
+    MODE         = "FERMETURE"
+    MIN_VAR      = 8.0
+    MIN_RVOL     = 3.0
+    MIN_VOL      = 300_000
+    MAX_FLOAT    = 30.0
+    MODE_EMOJI   = "🌆"
+    MODE_DESC    = "Surveillance fin de journée (14h-16h ET)"
+
+elif 16.0 <= heure < 20.0:
+    MODE         = "AFTER-HOURS"
+    MIN_VAR      = 5.0
+    MIN_RVOL     = 1.5
+    MIN_VOL      = 100_000
+    MAX_FLOAT    = 50.0
+    MODE_EMOJI   = "🌙"
+    MODE_DESC    = "After-hours (16h-20h ET)"
+
+else:
+    print(f"  ⚠ Hors heures de marché ({now_et.strftime('%H:%M')} ET)")
+    print("  ℹ Marché actif : lun-ven 4h00-20h00 ET")
+    with open("resultats.csv", "w", newline="", encoding="utf-8") as f:
+        f.write("")
+    exit(0)
+
+MIN_PRIX  = 0.50
+MAX_PRIX  = 20.0
+TOP_N     = 15
+DELAI     = 0.15
+
+print(f"  {MODE_EMOJI} MODE : {MODE}")
+print(f"  {MODE_DESC}")
+print(f"  Heure ET : {now_et.strftime('%H:%M')}")
+print(f"  Variation min : +{MIN_VAR}%")
+print(f"  RVOL min      : {MIN_RVOL}x")
+print(f"  Volume min    : {MIN_VOL:,}")
+print(f"  Float max     : {MAX_FLOAT}M\n")
 
 # =====================================================
-# ALERTES TELEGRAM
+# TELEGRAM
 # =====================================================
 
 def send_telegram(message):
-    """Envoie un message Telegram."""
     if not TG_TOKEN or not TG_CHAT_ID:
-        print("  ⚠ Telegram non configuré — skip alerte")
         return
     try:
         url  = f"https://api.telegram.org/bot{TG_TOKEN}/sendMessage"
@@ -46,13 +114,12 @@ def send_telegram(message):
         if r.status_code == 200:
             print("  ✅ Alerte Telegram envoyée")
         else:
-            print(f"  ⚠ Telegram erreur: {r.status_code} — {r.text[:100]}")
+            print(f"  ⚠ Telegram erreur {r.status_code}")
     except Exception as e:
-        print(f"  ⚠ Telegram exception: {e}")
+        print(f"  ⚠ Telegram: {e}")
 
 
 def send_telegram_alert(stock):
-    """Formate et envoie l'alerte pour un stock qualifié."""
     score   = stock["Score"]
     symbol  = stock["Symbol"]
     prix    = stock["Prix"]
@@ -63,8 +130,9 @@ def send_telegram_alert(stock):
     news    = stock["News"].split(" | ")[0][:80] if stock["News"] else ""
     tv_link = stock["TradingView"]
 
-    emoji = "🔥" if score >= 80 else "✅" if score >= 60 else "📊"
+    emoji     = "🔥" if score >= 80 else "✅" if score >= 60 else "📊"
     news_line = f"\n📰 <b>Catalyst :</b> {news}" if news else ""
+    mode_line = f"\n⏱ <b>Mode :</b> {MODE_EMOJI} {MODE}"
 
     msg = (
         f"⚔️ <b>WARRIOR ALERT</b>\n"
@@ -75,37 +143,36 @@ def send_telegram_alert(stock):
         f"⚡ <b>RVOL :</b> {rvol:.1f}x\n"
         f"📊 <b>Gap :</b> +{gap:.1f}%\n"
         f"🎯 <b>Float :</b> {float_m:.1f}M"
-        f"{news_line}\n\n"
+        f"{news_line}"
+        f"{mode_line}\n\n"
         f"📈 <a href='{tv_link}'>Voir sur TradingView</a>\n"
-        f"{'═' * 28}\n"
-        f"⏰ {datetime.now().strftime('%H:%M')} ET"
+        f"⏰ {now_et.strftime('%H:%M')} ET"
     )
     send_telegram(msg)
 
 
 # =====================================================
-# ÉTAPE 1 — FMP Screener
+# FMP SCREENER
 # =====================================================
 
 def get_fmp_candidates():
-    print("  Étape 1 — FMP Screener en cours...")
+    print("  Étape 1 — FMP Screener...")
     candidates = []
     try:
         url = (
             f"https://financialmodelingprep.com/api/v3/stock-screener"
-            f"?marketCapMoreThan=1000000"
+            f"?marketCapMoreThan=500000"
             f"&marketCapLessThan=5000000000"
             f"&priceMoreThan={MIN_PRIX}"
             f"&priceLessThan={MAX_PRIX}"
-            f"&volumeMoreThan={MIN_VOLUME}"
+            f"&volumeMoreThan={MIN_VOL}"
             f"&exchange=NASDAQ,NYSE,AMEX"
-            f"&limit=200"
+            f"&limit=300"
             f"&apikey={FMP_KEY}"
         )
-        r    = requests.get(url, timeout=10)
-        data = r.json()
+        data = requests.get(url, timeout=10).json()
         if not isinstance(data, list):
-            print(f"  ⚠ FMP Screener erreur: {data}")
+            print(f"  ⚠ FMP Screener: {str(data)[:100]}")
             return []
         print(f"  FMP Screener → {len(data)} résultats bruts")
         for stock in data:
@@ -115,50 +182,76 @@ def get_fmp_candidates():
             if any(symbol.endswith(x) for x in ["W", "U", "R", "Z", "L"]):
                 continue
             candidates.append(symbol)
-        print(f"  Candidats après nettoyage : {len(candidates)}\n")
-        return candidates
+        print(f"  Après nettoyage : {len(candidates)}")
     except Exception as e:
-        print(f"  ⚠ Erreur FMP Screener: {e}")
-        return []
+        print(f"  ⚠ FMP Screener erreur: {e}")
+    return candidates
 
 
-def get_fmp_movers():
+def get_fmp_gainers():
     candidates = []
     try:
         url  = f"https://financialmodelingprep.com/api/v3/stock_market/gainers?apikey={FMP_KEY}"
         data = requests.get(url, timeout=8).json()
         if isinstance(data, list):
-            for stock in data:
-                symbol = stock.get("symbol", "")
-                price  = float(stock.get("price", 0) or 0)
-                change = float(stock.get("changesPercentage", 0) or 0)
+            for s in data:
+                symbol = s.get("symbol", "")
+                price  = float(s.get("price", 0) or 0)
+                change = float(s.get("changesPercentage", 0) or 0)
                 if not symbol or len(symbol) > 5:
                     continue
-                if MIN_PRIX <= price <= MAX_PRIX and change >= MIN_VARIATION:
+                if any(symbol.endswith(x) for x in ["W", "U", "R", "Z"]):
+                    continue
+                if MIN_PRIX <= price <= MAX_PRIX and change >= MIN_VAR:
                     candidates.append(symbol)
-        print(f"  FMP Gainers → {len(candidates)} candidats supplémentaires")
+        print(f"  FMP Gainers → {len(candidates)} candidats")
     except Exception as e:
-        print(f"  ⚠ Erreur FMP Gainers: {e}")
+        print(f"  ⚠ FMP Gainers: {e}")
+    return candidates
+
+
+def get_fmp_premarket():
+    """Gappers pre-market via FMP."""
+    candidates = []
+    if MODE not in ["PRE-MARKET", "OUVERTURE"]:
+        return candidates
+    try:
+        url  = f"https://financialmodelingprep.com/api/v3/pre-market-stocks?apikey={FMP_KEY}"
+        data = requests.get(url, timeout=8).json()
+        if isinstance(data, list):
+            for s in data:
+                symbol = s.get("symbol", "")
+                price  = float(s.get("price", 0) or 0)
+                change = float(s.get("changesPercentage", 0) or 0)
+                if not symbol or len(symbol) > 5:
+                    continue
+                if MIN_PRIX <= price <= MAX_PRIX and change >= MIN_VAR:
+                    candidates.append(symbol)
+            print(f"  FMP Pre-Market → {len(candidates)} gappers")
+    except Exception as e:
+        print(f"  ⚠ FMP Pre-Market: {e}")
     return candidates
 
 
 # =====================================================
-# ÉTAPE 2 — Yahoo Finance
+# YAHOO FINANCE
 # =====================================================
 
 def get_quote_yahoo(symbol):
     try:
         headers   = {"User-Agent": "Mozilla/5.0"}
-        url_daily = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d&range=60d"
-        r_daily   = requests.get(url_daily, headers=headers, timeout=5).json()
-        res_daily = r_daily.get("chart", {}).get("result", [])
-        if not res_daily:
+
+        # Daily pour RVOL
+        url_d  = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1d&range=60d"
+        r_d    = requests.get(url_d, headers=headers, timeout=5).json()
+        res_d  = r_d.get("chart", {}).get("result", [])
+        if not res_d:
             return None
 
-        meta_d  = res_daily[0].get("meta", {})
-        q_daily = res_daily[0].get("indicators", {}).get("quote", [{}])[0]
-        closes  = [c for c in q_daily.get("close",  []) if c is not None]
-        vols_d  = [v for v in q_daily.get("volume", []) if v is not None]
+        meta_d  = res_d[0].get("meta", {})
+        q_d     = res_d[0].get("indicators", {}).get("quote", [{}])[0]
+        closes  = [c for c in q_d.get("close",  []) if c is not None]
+        vols_d  = [v for v in q_d.get("volume", []) if v is not None]
 
         avg_vol_10   = int(sum(vols_d[-11:-1]) / 10) if len(vols_d) >= 11 else 0
         avg_vol_30   = int(sum(vols_d[-31:-1]) / 30) if len(vols_d) >= 31 else 0
@@ -169,6 +262,7 @@ def get_quote_yahoo(symbol):
         market_cap   = float(meta_d.get("marketCap",   0) or 0)
         float_shares = float(meta_d.get("floatShares", 0) or 0)
 
+        # Intraday temps réel
         url_rt = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1m&range=1d&includePrePost=true"
         r_rt   = requests.get(url_rt, headers=headers, timeout=5).json()
         res_rt = r_rt.get("chart", {}).get("result", [])
@@ -262,6 +356,7 @@ def compute_warrior_score(d):
     score_momentum = min(m, 35)
 
     v = 0
+    if rvol >= 2:  v += 5
     if rvol >= 5:  v += 10
     if rvol >= 10: v += 5
     if rvol >= 20: v += 5
@@ -311,10 +406,14 @@ def compute_warrior_score(d):
 results  = []
 excluded = []
 
-candidates_screener = get_fmp_candidates()
-candidates_movers   = get_fmp_movers()
-all_candidates      = list(set(candidates_screener + candidates_movers))
+# Collecter les candidats selon le mode
+c_screener  = get_fmp_candidates()
+c_gainers   = get_fmp_gainers()
+c_premarket = get_fmp_premarket()
 
+all_candidates = list(set(c_screener + c_gainers + c_premarket))
+
+# Fallback watchlist
 if not all_candidates:
     print("  ⚠ FMP sans résultats → fallback watchlist.txt")
     try:
@@ -324,7 +423,8 @@ if not all_candidates:
         print("  ❌ watchlist.txt introuvable")
         exit()
 
-print(f"  Total candidats : {len(all_candidates)}\n")
+print(f"\n  Total candidats à analyser : {len(all_candidates)}")
+print(f"  Analyse Yahoo en cours...\n")
 
 for i, symbol in enumerate(all_candidates, 1):
     print(f"  [{i:>3}/{len(all_candidates)}] {symbol:<6}", end=" ", flush=True)
@@ -344,34 +444,30 @@ for i, symbol in enumerate(all_candidates, 1):
 
     print(f"| ${prix:.2f} | {variation:+.2f}% | RVOL:{rvol:.2f}x | Float:{float_m:.1f}M", end=" ")
 
+    # Filtres selon le mode
     if not (MIN_PRIX <= prix <= MAX_PRIX):
-        reason = f"Prix hors plage (${prix:.2f})"
-        print(f"✗ {reason}")
-        excluded.append({"Symbol": symbol, "Raison": reason})
+        print(f"✗ Prix (${prix:.2f})")
+        excluded.append({"Symbol": symbol, "Raison": f"Prix (${prix:.2f})"})
         continue
 
-    if volume < MIN_VOLUME:
-        reason = f"Volume faible ({volume:,})"
-        print(f"✗ {reason}")
-        excluded.append({"Symbol": symbol, "Raison": reason})
+    if volume < MIN_VOL:
+        print(f"✗ Volume ({volume:,})")
+        excluded.append({"Symbol": symbol, "Raison": f"Volume ({volume:,})"})
         continue
 
-    if variation < MIN_VARIATION_FINAL:
-        reason = f"Variation < +{MIN_VARIATION_FINAL}% ({variation:+.2f}%)"
-        print(f"✗ {reason}")
-        excluded.append({"Symbol": symbol, "Raison": reason})
+    if variation < MIN_VAR:
+        print(f"✗ Var ({variation:+.2f}%)")
+        excluded.append({"Symbol": symbol, "Raison": f"Var ({variation:+.2f}%)"})
         continue
 
-    if rvol < MIN_RVOL_FINAL:
-        reason = f"RVOL < {MIN_RVOL_FINAL}x ({rvol:.2f}x)"
-        print(f"✗ {reason}")
-        excluded.append({"Symbol": symbol, "Raison": reason})
+    if rvol < MIN_RVOL:
+        print(f"✗ RVOL ({rvol:.2f}x)")
+        excluded.append({"Symbol": symbol, "Raison": f"RVOL ({rvol:.2f}x)"})
         continue
 
-    if float_m > 0 and float_m > MAX_FLOAT_M:
-        reason = f"Float trop élevé ({float_m:.1f}M)"
-        print(f"✗ {reason}")
-        excluded.append({"Symbol": symbol, "Raison": reason})
+    if float_m > 0 and float_m > MAX_FLOAT:
+        print(f"✗ Float ({float_m:.1f}M)")
+        excluded.append({"Symbol": symbol, "Raison": f"Float ({float_m:.1f}M)"})
         continue
 
     scores = compute_warrior_score(data)
@@ -408,26 +504,30 @@ for i, symbol in enumerate(all_candidates, 1):
         "News":        news_titles,
         "News Links":  news_links,
         "Mode":        data.get("mode", ""),
-        "Heure":       datetime.now().strftime("%H:%M:%S"),
+        "Heure":       now_et.strftime("%H:%M:%S"),
     }
     results.append(result)
-
-    # ── Alerte Telegram immédiate pour chaque qualifié ──
     send_telegram_alert(result)
 
 # =====================================================
-# Résultats
+# RÉSULTATS
 # =====================================================
 
 results.sort(key=lambda x: x["Score"], reverse=True)
 
 print("\n" + "=" * 62)
-print(f"  RÉSULTATS — {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+print(f"  {MODE_EMOJI} {MODE} — {now_et.strftime('%Y-%m-%d %H:%M')} ET")
 print("=" * 62)
 
 if not results:
-    print("\n  Aucune action qualifiée.")
-    print("  Relance entre 9h30 et 11h00 ET (15h30-17h00 MTL).\n")
+    print(f"\n  Aucune action qualifiée en mode {MODE}.")
+    if MODE == "OUVERTURE":
+        print("  → Journée calme ou marché sans momentum aujourd'hui.")
+    elif MODE == "PRE-MARKET":
+        print("  → Pas de gappers significatifs ce matin.")
+    else:
+        print("  → Reviens en mode OUVERTURE (9h30-11h ET).")
+    # Vider le CSV
     with open("resultats.csv", "w", newline="", encoding="utf-8") as f:
         f.write("")
 else:
@@ -443,13 +543,14 @@ else:
     print(f"\n  ✅ {len(results)} qualifiés / ✗ {len(excluded)} exclus")
 
     # Résumé Telegram
-    summary = f"⚔️ <b>SCAN WARRIOR TERMINÉ</b>\n{'═'*28}\n✅ {len(results)} qualifiés\n⏰ {datetime.now().strftime('%H:%M')} ET\n\n"
+    summary = f"{MODE_EMOJI} <b>SCAN {MODE} TERMINÉ</b>\n{'═'*28}\n✅ <b>{len(results)} qualifiés</b>\n⏰ {now_et.strftime('%H:%M')} ET\n\n"
     for s in results[:5]:
         emoji = "🔥" if s["Score"] >= 80 else "✅"
-        summary += f"{emoji} <b>{s['Symbol']}</b> — {s['Score']}/100 | +{s['Variation %']:.1f}% | RVOL {s['RVOL']:.1f}x\n"
+        summary += f"{emoji} <b>{s['Symbol']}</b> {s['Score']}/100 | +{s['Variation %']:.1f}% | RVOL {s['RVOL']:.1f}x\n"
     send_telegram(summary)
 
-    ts = datetime.now().strftime("%Y%m%d_%H%M")
+    # Export CSV
+    ts = now_et.strftime("%Y%m%d_%H%M")
     for fname in [f"warrior_{ts}.csv", "resultats.csv"]:
         with open(fname, "w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=list(results[0].keys()))
