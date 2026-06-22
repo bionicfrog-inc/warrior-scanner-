@@ -267,7 +267,7 @@ def get_quote_yahoo(symbol):
                 fmp_url = f"https://financialmodelingprep.com/api/v3/shares_float?symbol={symbol}&apikey={FMP_KEY}"
                 fmp_r = requests.get(fmp_url, timeout=3).json()
                 if isinstance(fmp_r, list) and fmp_r:
-            float_shares = float(fmp_r[0].get("floatShares", 0) or 0)
+                    float_shares = float(fmp_r[0].get("floatShares", 0) or 0)
             except Exception:
                 pass
         # Intraday temps réel
