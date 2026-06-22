@@ -109,6 +109,20 @@ body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-ser
   <button class="btn scan" onclick="lancerScan()">▶ Warrior Scan</button>
   <div id="scan-status" style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--muted);text-align:center;margin-top:4px"></div>
 
+  <!-- Tickers manuels Warrior -->
+  <div>
+    <label>📸 Screenshot ou tickers</label>
+    <div style="background:var(--bg);border:1px dashed var(--green);border-radius:4px;padding:6px;text-align:center;cursor:pointer;margin-bottom:6px;font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--green)" onclick="document.getElementById('warrior-file').click()">
+      📷 Upload screenshot
+      <input type="file" id="warrior-file" accept="image/*" style="display:none" onchange="handleWarriorScreenshot(this)">
+    </div>
+    <div id="warrior-img-status" style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--muted);text-align:center;margin-bottom:4px"></div>
+    <textarea id="warrior-tickers" placeholder="TNON JAGX NXTS..." style="width:100%;height:55px;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:IBM Plex Mono,monospace;font-size:11px;padding:6px;border-radius:4px;resize:none;outline:none"></textarea>
+    <div style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--muted)" id="warrior-ticker-count">0 tickers</div>
+    <button onclick="lancerScanTickers()" style="width:100%;background:var(--bg);border:1px solid var(--green);color:var(--green);font-family:IBM Plex Mono,monospace;font-size:11px;padding:6px;border-radius:4px;cursor:pointer;margin-top:4px">▶ Scanner ces tickers</button>
+    <div id="warrior-ticker-status" style="font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--muted);text-align:center;margin-top:4px"></div>
+  </div>
+
   <hr class="sidebar-divider">
 
   <button class="btn fvz" onclick="lancerFinviz()">📡 Finviz Scan</button>
@@ -425,6 +439,107 @@ function lancerFinviz(){
   }).catch(()=>{btn.textContent='📡 Finviz Scan';btn.disabled=false;status.textContent='❌ Erreur réseau';});
 }
 
+// ─── WARRIOR — Screenshot + Tickers manuels ───
+
+let warriorImage64 = null;
+
+function handleWarriorScreenshot(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    warriorImage64 = e.target.result.split(',')[1];
+    document.getElementById('warrior-img-status').textContent = '✓ Image chargée';
+    document.getElementById('warrior-img-status').style.color = 'var(--green)';
+  };
+  reader.readAsDataURL(file);
+}
+
+// Compteur tickers warrior
+document.addEventListener('DOMContentLoaded', () => {
+  const ta = document.getElementById('warrior-tickers');
+  if (ta) {
+    ta.addEventListener('input', () => {
+      const t = extractTickers(ta.value);
+      document.getElementById('warrior-ticker-count').textContent = t.length + ' tickers';
+    });
+  }
+});
+
+async function lancerScanTickers() {
+  const status = document.getElementById('warrior-ticker-status');
+  const manual = document.getElementById('warrior-tickers').value;
+  let tickers  = [];
+
+  // Screenshot via Claude AI
+  if (warriorImage64) {
+    status.textContent = '🤖 Claude lit le screenshot...';
+    status.style.color = 'var(--amber)';
+    try {
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 500,
+          messages: [{
+            role: 'user',
+            content: [
+              {type: 'image', source: {type: 'base64', media_type: 'image/jpeg', data: warriorImage64}},
+              {type: 'text', text: 'Extract ALL stock ticker symbols from this image (1-5 uppercase letters). Return ONLY tickers separated by spaces. Example: TNON JAGX NXTS'}
+            ]
+          }]
+        })
+      });
+      const data = await resp.json();
+      if (data.content && data.content[0]) {
+        tickers = extractTickers(data.content[0].text);
+        document.getElementById('warrior-tickers').value = tickers.join(' ');
+        document.getElementById('warrior-ticker-count').textContent = tickers.length + ' tickers';
+        status.textContent = `✅ ${tickers.length} tickers extraits`;
+        status.style.color = 'var(--green)';
+      }
+    } catch(e) {
+      status.textContent = '⚠ Erreur Claude — utilise les tickers manuels';
+      status.style.color = 'var(--amber)';
+    }
+  }
+
+  // Tickers manuels
+  if (manual.trim()) {
+    tickers = [...new Set([...tickers, ...extractTickers(manual)])];
+  }
+
+  if (tickers.length === 0) {
+    status.textContent = '⚠ Aucun ticker détecté';
+    status.style.color = 'var(--red)';
+    return;
+  }
+
+  status.textContent = `⏳ Analyse de ${tickers.length} stocks...`;
+  status.style.color = 'var(--amber)';
+
+  try {
+    const r = await fetch('/scan-warrior-tickers', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({tickers: tickers})
+    });
+    const d = await r.json();
+    if (d.ok) {
+      status.textContent = `✅ ${d.count} qualifiés`;
+      status.style.color = 'var(--green)';
+      loadData();
+    } else {
+      status.textContent = '❌ ' + d.message.slice(0,40);
+      status.style.color = 'var(--red)';
+    }
+  } catch(e) {
+    status.textContent = '❌ Erreur réseau';
+    status.style.color = 'var(--red)';
+  }
+}
+
 // ─── FINVIZ — Screenshot + Tickers manuels ───
 
 let fvzImage64 = null;
@@ -649,6 +764,33 @@ def run_scan():
         if result.returncode == 0:
             return jsonify({"ok": True,  "message": "Scan terminé"})
         return jsonify({"ok": False, "message": result.stderr[-300:] or "Erreur scanner"})
+    except subprocess.TimeoutExpired:
+        return jsonify({"ok": False, "message": "Timeout"})
+    except Exception as e:
+        return jsonify({"ok": False, "message": str(e)})
+
+@app.route("/scan-warrior-tickers", methods=["POST"])
+def scan_warrior_tickers():
+    """Lance le scanner Warrior sur une liste de tickers spécifiques."""
+    try:
+        from flask import request as req
+        data    = req.get_json()
+        tickers = data.get("tickers", [])
+        if not tickers:
+            return jsonify({"ok": False, "message": "Aucun ticker reçu"})
+
+        env = os.environ.copy()
+        env["MANUAL_TICKERS"] = " ".join(tickers[:50])
+
+        result = subprocess.run(
+            [sys.executable, "scanner_warrior.py"],
+            capture_output=True, text=True, timeout=600,
+            cwd=os.getcwd(), env=env
+        )
+        rows, _ = load_csv(CSV_PATH)
+        if result.returncode == 0:
+            return jsonify({"ok": True, "message": "Scan terminé", "count": len(rows)})
+        return jsonify({"ok": False, "message": result.stderr[-200:] or "Erreur"})
     except subprocess.TimeoutExpired:
         return jsonify({"ok": False, "message": "Timeout"})
     except Exception as e:
