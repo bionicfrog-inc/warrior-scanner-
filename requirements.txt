@@ -4,3 +4,4 @@ gunicorn==22.0.0
 pandas==2.3.0
 numpy==2.3.0
 yfinance==0.2.65
+pytz
