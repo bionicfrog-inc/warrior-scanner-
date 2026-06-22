@@ -261,7 +261,15 @@ def get_quote_yahoo(symbol):
         year_low     = float(meta_d.get("fiftyTwoWeekLow",  0) or (min(closes) if closes else 0))
         market_cap   = float(meta_d.get("marketCap",   0) or 0)
         float_shares = float(meta_d.get("floatShares", 0) or 0)
-
+        # Fallback FMP si Yahoo ne retourne pas le float
+        if float_shares == 0:
+            try:
+                fmp_url = f"https://financialmodelingprep.com/api/v3/shares_float?symbol={symbol}&apikey={FMP_KEY}"
+                fmp_r = requests.get(fmp_url, timeout=3).json()
+                if isinstance(fmp_r, list) and fmp_r:
+            float_shares = float(fmp_r[0].get("floatShares", 0) or 0)
+            except Exception:
+                pass
         # Intraday temps réel
         url_rt = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}?interval=1m&range=1d&includePrePost=true"
         r_rt   = requests.get(url_rt, headers=headers, timeout=5).json()
